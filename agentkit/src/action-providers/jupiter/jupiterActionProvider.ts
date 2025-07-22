@@ -117,7 +117,7 @@ export class JupiterActionProvider extends ActionProvider<SvmWalletProvider> {
    * @returns True if the network is a Solana network
    */
   supportsNetwork(network: Network): boolean {
-    return network.protocolFamily == "svm" && network.networkId === "solana-mainnet";
+    return network.protocolFamily === "svm" && network.networkId === "solana-mainnet";
   }
 }
 

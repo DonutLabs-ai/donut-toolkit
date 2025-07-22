@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "agentkit": {
+      "command": "/opt/homebrew/bin/node",
+      "args": ["/Users/nickhuo/Documents/GitHub/donut-toolkits/server/mcp-server.js"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+} 

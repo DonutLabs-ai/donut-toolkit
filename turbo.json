@@ -4,20 +4,13 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [
-        "dist/**",
-        ".next/**",
-        "!.next/cache/**",
-        "build/**"
-      ]
+      "outputs": ["dist/**", "build/**"]
     },
     "test": {
       "dependsOn": ["build"],
       "inputs": ["src/**/*.ts", "test/**/*.ts"]
     },
-    "lint": {
-      "outputs": []
-    },
+    "lint": {},
     "lint:fix": {
       "cache": false
     },
@@ -30,15 +23,9 @@
     "clean": {
       "cache": false
     },
-    "docs": {
-      "outputs": ["docs/**"]
-    },
     "dev": {
       "cache": false,
       "persistent": true
-    },
-    "test:types": {
-      "dependsOn": ["build"]
     }
   }
 }

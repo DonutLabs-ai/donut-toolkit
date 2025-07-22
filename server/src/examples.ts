@@ -2,9 +2,9 @@
  * Usage examples for AgentKit MCP Extension without CDP API Keys
  */
 
-import { Server } from "@modelcontextprotocol/sdk/server/index";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio";
-import { CallToolRequestSchema, ListToolsRequestSchema, Tool, CallToolResult } from "@modelcontextprotocol/sdk/types";
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { CallToolRequestSchema, ListToolsRequestSchema, Tool, CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { 
   getMcpTools, 
   getMcpToolsFromProviders,

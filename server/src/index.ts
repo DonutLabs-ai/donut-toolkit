@@ -3,7 +3,7 @@
  */
 
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { CallToolResult, Tool } from "@modelcontextprotocol/sdk/types";
+import { CallToolResult, Tool } from "@modelcontextprotocol/sdk/types.js";
 import { AgentKit, Action, ActionProvider, WalletProvider, Network } from "@coinbase/agentkit";
 
 /**
