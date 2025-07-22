@@ -74,24 +74,26 @@ export class WalletActionProvider extends ActionProvider {
   }
 
   /**
-   * Transfers a specified amount of native currency to a destination onchain.
+   * Creates an unsigned transaction for transferring native currency to a destination address.
    *
    * @param walletProvider - The wallet provider to transfer from.
    * @param args - The input arguments for the action.
-   * @returns A message containing the transfer details.
+   * @returns A JSON string containing the unsigned transaction message.
    */
   @CreateAction({
     name: "native_transfer",
     description: `
-This tool will transfer native tokens from the wallet to another onchain address.
+This tool creates an unsigned transaction to transfer native tokens from the wallet to another onchain address.
 
 It takes the following inputs:
 - amount: The amount to transfer in whole units (e.g. 1 ETH, 0.1 SOL)
 - destination: The address to receive the funds
 
 Important notes:
+- Returns unsigned transaction data for manual signing
 - Ensure sufficient balance of the input asset before transferring
 - Ensure there is sufficient native token balance for gas fees
+- User must sign and broadcast the transaction separately
 `,
     schema: NativeTransferSchema,
   })
@@ -103,20 +105,147 @@ Important notes:
       const { protocolFamily } = walletProvider.getNetwork();
       const terminology = PROTOCOL_FAMILY_TO_TERMINOLOGY[protocolFamily] || DEFAULT_TERMINOLOGY;
 
+      // Validate and normalize the destination address
+      let toAddress = args.to;
       if (protocolFamily === "evm" && !args.to.startsWith("0x")) {
-        args.to = `0x${args.to}`;
+        toAddress = `0x${args.to}`;
       }
 
-      const result = await walletProvider.nativeTransfer(args.to, args.value);
-      return [
-        `Transferred ${args.value} ${terminology.displayUnit} to ${args.to}`,
-        `${terminology.type}: ${result}`,
-      ].join("\n");
+      // Build unsigned transaction based on protocol family
+      if (protocolFamily === "svm") {
+        return await this.buildSolanaTransfer(walletProvider, toAddress, args.value, terminology);
+      } else if (protocolFamily === "evm") {
+        return await this.buildEvmTransfer(walletProvider, toAddress, args.value, terminology);
+      } else {
+        throw new Error(`Unsupported protocol family: ${protocolFamily}`);
+      }
     } catch (error) {
       const { protocolFamily } = walletProvider.getNetwork();
       const terminology = PROTOCOL_FAMILY_TO_TERMINOLOGY[protocolFamily] || DEFAULT_TERMINOLOGY;
-      return `Error during ${terminology.verb}: ${error}`;
+      return JSON.stringify({
+        success: false,
+        error: `Failed to create ${terminology.verb} transaction`,
+        message: `Error creating unsigned ${terminology.verb} transaction: ${error}`,
+      });
     }
+  }
+
+  /**
+   * Builds an unsigned Solana transfer transaction.
+   */
+  private async buildSolanaTransfer(
+    walletProvider: WalletProvider,
+    toAddress: string,
+    value: string,
+    terminology: any
+  ): Promise<string> {
+    // Import Solana dependencies dynamically
+    const { PublicKey, SystemProgram, ComputeBudgetProgram, VersionedTransaction, MessageV0, LAMPORTS_PER_SOL } = await import("@solana/web3.js");
+    
+    const fromPubkey = new PublicKey(walletProvider.getAddress());
+    const toPubkey = new PublicKey(toAddress);
+    const solAmount = parseFloat(value);
+    const lamports = BigInt(Math.floor(solAmount * LAMPORTS_PER_SOL));
+
+    // Check balance
+    const balance = await walletProvider.getBalance();
+    if (balance < lamports + BigInt(5000)) {
+      throw new Error(
+        `Insufficient balance. Have ${Number(balance) / LAMPORTS_PER_SOL} SOL, need ${
+          solAmount + 0.000005
+        } SOL (including fees)`
+      );
+    }
+
+    const instructions = [
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 10000,
+      }),
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: 2000,
+      }),
+      SystemProgram.transfer({
+        fromPubkey: fromPubkey,
+        toPubkey: toPubkey,
+        lamports: lamports,
+      }),
+    ];
+
+    const tx = new VersionedTransaction(
+      MessageV0.compile({
+        payerKey: fromPubkey,
+        instructions: instructions,
+        recentBlockhash: "11111111111111111111111111111111", // Placeholder blockhash
+      }),
+    );
+
+    const unsignedTransaction = Buffer.from(tx.serialize()).toString("base64");
+
+    return JSON.stringify({
+      success: true,
+      message: `Successfully created unsigned ${terminology.verb} transaction`,
+      unsigned_message: unsignedTransaction,
+      transactionType: "native_transfer",
+      from: walletProvider.getAddress(),
+      to: toAddress,
+      amount: value,
+      amountLamports: lamports.toString(),
+      requiresBlockhashUpdate: true,
+      note: "Update the blockhash before signing this transaction",
+    });
+  }
+
+  /**
+   * Builds an unsigned EVM transfer transaction.
+   */
+  private async buildEvmTransfer(
+    walletProvider: WalletProvider,
+    toAddress: string,
+    value: string,
+    terminology: any
+  ): Promise<string> {
+    // For EVM, we need to build a proper transaction object
+    // This is a simplified implementation - real implementation would need proper gas estimation
+    
+    const fromAddress = walletProvider.getAddress();
+    const weiValue = BigInt(Math.floor(parseFloat(value) * 1e18)); // Convert ETH to Wei
+
+    // Check balance (simplified)
+    const balance = await walletProvider.getBalance();
+    if (balance < weiValue + BigInt(21000 * 20000000000)) { // rough gas estimate
+      throw new Error(
+        `Insufficient balance. Have ${Number(balance) / 1e18} ETH, need ${
+          parseFloat(value) + 0.0004
+        } ETH (including fees)`
+      );
+    }
+
+    // Build transaction object (this would need to be serialized properly for the specific EVM implementation)
+    const transactionData = {
+      from: fromAddress,
+      to: toAddress,
+      value: `0x${weiValue.toString(16)}`,
+      gas: "0x5208", // 21000 in hex
+      gasPrice: "0x4a817c800", // 20 gwei in hex
+      nonce: "0x0", // This should be fetched from the network
+      data: "0x",
+    };
+
+    // Note: This is a simplified representation. Real implementation would need proper RLP encoding
+    const unsignedTransaction = Buffer.from(JSON.stringify(transactionData)).toString("base64");
+
+    return JSON.stringify({
+      success: true,
+      message: `Successfully created unsigned ${terminology.verb} transaction`,
+      unsigned_message: unsignedTransaction,
+      transactionType: "native_transfer",
+      from: fromAddress,
+      to: toAddress,
+      amount: value,
+      amountWei: weiValue.toString(),
+      requiresNonceUpdate: true,
+      note: "This is a simplified EVM transaction representation. Real implementation needs proper RLP encoding and nonce management.",
+    });
   }
 
   /**

@@ -107,6 +107,23 @@ export class SplActionProvider extends ActionProvider<SvmWalletProvider> {
     args: z.infer<typeof TransferTokenSchema>,
   ): Promise<string> {
     try {
+      // Validate addresses first
+      if (!this.validateSolanaAddress(args.recipient)) {
+        return JSON.stringify({
+          success: false,
+          error: "Invalid recipient address",
+          message: `Recipient address ${args.recipient} is not a valid Solana address`,
+        });
+      }
+
+      if (!this.validateSolanaAddress(args.mintAddress)) {
+        return JSON.stringify({
+          success: false,
+          error: "Invalid mint address", 
+          message: `Mint address ${args.mintAddress} is not a valid Solana address`,
+        });
+      }
+
       const fromPubkey = walletProvider.getPublicKey();
       const toPubkey = new PublicKey(args.recipient);
       const mintPubkey = new PublicKey(args.mintAddress);
@@ -187,6 +204,21 @@ export class SplActionProvider extends ActionProvider<SvmWalletProvider> {
    */
   supportsNetwork(network: Network): boolean {
     return network.protocolFamily === "svm";
+  }
+
+  /**
+   * Validates if a string is a valid Solana address.
+   * 
+   * @param address - The address string to validate
+   * @returns True if the address is valid, false otherwise
+   */
+  private validateSolanaAddress(address: string): boolean {
+    try {
+      new PublicKey(address);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 

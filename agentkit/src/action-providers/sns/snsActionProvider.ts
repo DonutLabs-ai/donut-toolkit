@@ -231,10 +231,9 @@ export class SNSActionProvider extends ActionProvider {
   }
 
   /**
-   * Check if the action provider supports the given network.
    * SNS only works on Solana, so this checks for Solana networks.
    */
   supportsNetwork(network: Network): boolean {
-    return network.protocolFamily === "svm" || network.protocolFamily === "solana";
+    return network.protocolFamily === "svm";
   }
 } 

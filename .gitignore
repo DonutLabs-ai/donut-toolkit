@@ -146,6 +146,9 @@ logs
 coverage/
 .nyc_output/
 
+# AgentKit test directory
+agentkit/test/
+
 # Temporary files
 tmp/
 temp/
@@ -164,3 +167,5 @@ wallet.json
 # Documentation build
 docs/build/
 docs/.vuepress/dist/ 
+
+CLAUDE.md

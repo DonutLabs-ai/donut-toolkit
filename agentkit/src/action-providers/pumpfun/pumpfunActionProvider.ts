@@ -111,10 +111,8 @@ export class PumpfunActionProvider extends ActionProvider<SvmWalletProvider> {
           telegram: args.telegram,
           website: args.website,
         },
-        mintKeypair: {
-          publicKey: mint.publicKey.toBase58(),
-          secretKey: Array.from(mint.secretKey), // Return as array for easy conversion
-        },
+
+        mintPublicKey: mint.publicKey.toBase58(),
         pumpfunUrl: `https://pump.fun/coin/${mint.publicKey.toBase58()}`,
       });
     } catch (error) {
@@ -286,10 +284,8 @@ export class PumpfunActionProvider extends ActionProvider<SvmWalletProvider> {
         amountToBuyInSol: args.amountToBuyInSol,
         slippage: args.slippage,
         priorityFee: args.priorityFee,
-        mintKeypair: {
-          publicKey: mint.publicKey.toBase58(),
-          secretKey: Array.from(mint.secretKey), // Return as array for easy conversion
-        },
+        // ⚠️ SECURITY: Never return private keys! Only return public information
+        mintPublicKey: mint.publicKey.toBase58(),
         pumpfunUrl: `https://pump.fun/coin/${mint.publicKey.toBase58()}`,
       });
     } catch (error) {
@@ -354,7 +350,7 @@ export class PumpfunActionProvider extends ActionProvider<SvmWalletProvider> {
    * @returns True if the network is supported, false otherwise
    */
   supportsNetwork = (network: Network) => {
-    return network.protocolFamily === "solana" && network.networkId === "solana-mainnet";
+    return network.protocolFamily === "svm" && network.networkId === "solana-mainnet";
   };
 }
 

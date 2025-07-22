@@ -5,7 +5,7 @@ import { ActionProvider } from "../actionProvider";
 import { Network } from "../../network";
 import { SvmWalletProvider } from "../../wallet-providers/svmWalletProvider";
 import { CreateAction } from "../actionDecorator";
-import { PublicKey, Connection, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { PublicKey, Connection, Transaction, TransactionInstruction, VersionedTransaction, MessageV0 } from "@solana/web3.js";
 import axios from "axios";
 import {
   CreatePositionSchema,
@@ -616,37 +616,62 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
 
   /**
    * Generates a mock unsigned transaction for testing when the real API is not available
+   * Returns a properly formatted Solana transaction in base64 format
    */
   private generateMockUnsignedTransaction(
     transactionType: string,
     requestData: any
   ): string {
-    // Create a mock transaction structure based on Solana transaction format
-    const mockTransactionData = {
-      version: "legacy",
-      instructions: [
-        {
-          programId: METEORA_DLMM_PROGRAM_ID.toString(),
-          accounts: [
-            requestData.user || requestData.position,
-            requestData.pool || "mock-pool-address",
-          ],
-          data: transactionType,
-        },
-      ],
-      recentBlockhash: "11111111111111111111111111111111",
-      feePayer: requestData.user,
-    };
+    try {
+      // Create a minimal valid Solana transaction structure
+      const mockInstruction = new TransactionInstruction({
+        programId: METEORA_DLMM_PROGRAM_ID,
+        keys: [
+          {
+            pubkey: new PublicKey(requestData.user || requestData.position),
+            isSigner: true,
+            isWritable: true,
+          },
+          {
+            pubkey: new PublicKey(requestData.pool || METEORA_DLMM_PROGRAM_ID.toString()),
+            isSigner: false,
+            isWritable: false,
+          },
+        ],
+        data: Buffer.from(transactionType, 'utf8'), // Simple instruction data
+      });
 
-    // Return the mock transaction as a base64-encoded string
-    return Buffer.from(JSON.stringify(mockTransactionData)).toString("base64");
+      // Build a proper VersionedTransaction
+      const transaction = new VersionedTransaction(
+        MessageV0.compile({
+          payerKey: new PublicKey(requestData.user || requestData.position),
+          instructions: [mockInstruction],
+          recentBlockhash: "11111111111111111111111111111111", // Placeholder blockhash
+        })
+      );
+
+      // Return the properly serialized transaction as base64
+      return Buffer.from(transaction.serialize()).toString("base64");
+    } catch (error) {
+      console.error("Failed to generate mock transaction:", error);
+      
+      // Fallback: return a clear error message in the expected format
+      return Buffer.from(JSON.stringify({
+        error: "Mock transaction generation failed",
+        message: "Real API call required for valid transaction",
+        transactionType: transactionType,
+        note: "This is a fallback response when transaction generation fails"
+      })).toString("base64");
+    }
   }
 
   /**
    * Checks if the action provider supports the given network
    */
   supportsNetwork(network: Network): boolean {
-    return network.protocolFamily === "svm" && SUPPORTED_NETWORKS.includes(network.networkId!);
+    return network.protocolFamily === "svm" && 
+           network.networkId !== undefined && 
+           SUPPORTED_NETWORKS.includes(network.networkId);
   }
 }
 
