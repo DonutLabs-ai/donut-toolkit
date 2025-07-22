@@ -3,7 +3,7 @@
  */
 
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { CallToolResult, Tool } from "@modelcontextprotocol/sdk/types.js";
+import { CallToolResult, Tool } from "@modelcontextprotocol/sdk/types";
 import { AgentKit, Action, ActionProvider, WalletProvider, Network } from "@coinbase/agentkit";
 
 /**
@@ -153,7 +153,15 @@ export async function getMcpToolsFromProviders(
   
   // Collect all actions from all providers
   for (const provider of actionProviders) {
-    actions.push(...provider.getActions());
+    // For read-only providers that don't need wallet, we pass null
+    // The provider should handle cases where no wallet is needed
+    try {
+      const providerActions = provider.getActions(null as any);
+      actions.push(...providerActions);
+    } catch (error) {
+      // Some providers might need wallet, skip them for read-only mode
+      console.warn(`Skipping provider ${provider.constructor.name}: ${error}`);
+    }
   }
 
   return {

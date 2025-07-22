@@ -12,19 +12,19 @@ const TEST_CONFIG = {
     USDC: {
       mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       decimals: 6,
-      symbol: "USDC"
+      symbol: "USDC",
     },
     USDT: {
-      mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", 
+      mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
       decimals: 6,
-      symbol: "USDT"
+      symbol: "USDT",
     },
     SOL: {
       mint: "So11111111111111111111111111111111111111112",
       decimals: 9,
-      symbol: "Wrapped SOL"
-    }
-  }
+      symbol: "Wrapped SOL",
+    },
+  },
 };
 
 // Mock wallet provider
@@ -45,8 +45,11 @@ class MockWalletProvider {
 // Simple SPL transfer implementation (core of method 1)
 async function createSplTransfer(walletProvider, args) {
   try {
-    const { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferCheckedInstruction } = 
-      await import("@solana/spl-token");
+    const {
+      getAssociatedTokenAddress,
+      createAssociatedTokenAccountInstruction,
+      createTransferCheckedInstruction,
+    } = await import("@solana/spl-token");
 
     const fromPubkey = walletProvider.getPublicKey();
     const toPubkey = new PublicKey(args.recipient);
@@ -54,7 +57,7 @@ async function createSplTransfer(walletProvider, args) {
 
     // Calculate the raw amount using user-provided decimals
     const adjustedAmount = args.amount * Math.pow(10, args.decimals);
-    
+
     // Calculate ATA addresses (no chain queries needed)
     const sourceAta = await getAssociatedTokenAddress(mintPubkey, fromPubkey);
     const destinationAta = await getAssociatedTokenAddress(mintPubkey, toPubkey);
@@ -63,7 +66,7 @@ async function createSplTransfer(walletProvider, args) {
 
     // Always add create ATA instruction (chain will handle if it already exists)
     instructions.push(
-      createAssociatedTokenAccountInstruction(fromPubkey, destinationAta, toPubkey, mintPubkey)
+      createAssociatedTokenAccountInstruction(fromPubkey, destinationAta, toPubkey, mintPubkey),
     );
 
     // Add transfer instruction
@@ -75,7 +78,7 @@ async function createSplTransfer(walletProvider, args) {
         fromPubkey,
         adjustedAmount,
         args.decimals,
-      )
+      ),
     );
 
     // Build unsigned transaction with placeholder blockhash
@@ -84,7 +87,7 @@ async function createSplTransfer(walletProvider, args) {
         payerKey: fromPubkey,
         instructions: instructions,
         recentBlockhash: "11111111111111111111111111111111", // Placeholder blockhash
-      })
+      }),
     );
 
     // Serialize to base64
@@ -103,7 +106,6 @@ async function createSplTransfer(walletProvider, args) {
       requiresBlockhashUpdate: true,
       note: "Update the blockhash before signing this transaction",
     };
-
   } catch (error) {
     return {
       success: false,
@@ -115,8 +117,8 @@ async function createSplTransfer(walletProvider, args) {
 
 async function runTests() {
   console.log("🚀 Testing SPL Transfer with Real API Environment (Simplified)");
-  console.log("=" .repeat(60));
-  
+  console.log("=".repeat(60));
+
   const mockWallet = new MockWalletProvider(TEST_CONFIG.userPublicKey);
 
   console.log(`📍 Test Configuration:`);
@@ -128,10 +130,10 @@ async function runTests() {
   for (const [symbol, tokenInfo] of Object.entries(TEST_CONFIG.tokens)) {
     console.log(`\n💰 Testing ${symbol} Transfer`);
     console.log("-".repeat(40));
-    
+
     try {
       const transferAmount = symbol === "BONK" ? 1000 : 1;
-      
+
       console.log(`📊 Transfer Details:`);
       console.log(`  Token: ${tokenInfo.symbol}`);
       console.log(`  Mint: ${tokenInfo.mint}`);
@@ -147,29 +149,31 @@ async function runTests() {
       });
 
       console.log(`\n✅ Transfer Result:`);
-      
+
       if (result.success) {
         console.log(`  ✓ Success: ${result.message}`);
         console.log(`  ✓ Transaction Type: ${result.transactionType}`);
         console.log(`  ✓ Requires Blockhash Update: ${result.requiresBlockhashUpdate}`);
         console.log(`  ✓ Adjusted Amount: ${result.adjustedAmount}`);
-        
+
         // Validate unsigned transaction
         if (result.unsigned_message) {
           console.log(`\n🔍 Transaction Analysis:`);
           console.log(`  ✓ Base64 Length: ${result.unsigned_message.length} characters`);
-          
+
           // Validate base64 format
           try {
             const decodedBuffer = Buffer.from(result.unsigned_message, "base64");
             console.log(`  ✓ Decoded Size: ${decodedBuffer.length} bytes`);
             console.log(`  ✓ First 20 bytes: ${decodedBuffer.slice(0, 20).toString("hex")}`);
-            
+
             // Try to deserialize back to transaction
             const deserializedTx = VersionedTransaction.deserialize(decodedBuffer);
             console.log(`  ✓ Transaction deserialized successfully`);
-            console.log(`  ✓ Instructions count: ${deserializedTx.message.staticAccountKeys.length}`);
-            
+            console.log(
+              `  ✓ Instructions count: ${deserializedTx.message.staticAccountKeys.length}`,
+            );
+
             // Display transaction preview
             console.log(`\n📋 Transaction Preview:`);
             console.log(`  - From: ${TEST_CONFIG.userPublicKey}`);
@@ -177,7 +181,6 @@ async function runTests() {
             console.log(`  - Token: ${tokenInfo.mint}`);
             console.log(`  - Amount: ${transferAmount} ${symbol}`);
             console.log(`  - Note: ${result.note}`);
-            
           } catch (error) {
             console.log(`  ❌ Transaction validation failed: ${error}`);
           }
@@ -188,7 +191,6 @@ async function runTests() {
         console.log(`  ❌ Failed: ${result.error}`);
         console.log(`  ❌ Message: ${result.message}`);
       }
-
     } catch (error) {
       console.log(`❌ Test failed for ${symbol}: ${error}`);
     }
@@ -208,7 +210,7 @@ async function runTests() {
       decimals: TEST_CONFIG.tokens.USDC.decimals,
     });
 
-    console.log(`  Result: ${result.success ? '✅ Success' : '❌ Failed'}`);
+    console.log(`  Result: ${result.success ? "✅ Success" : "❌ Failed"}`);
     if (result.success) {
       console.log(`  Raw amount: ${result.adjustedAmount}`);
     } else {
@@ -228,7 +230,7 @@ async function runTests() {
       decimals: TEST_CONFIG.tokens.USDC.decimals,
     });
 
-    console.log(`  Result: ${result.success ? '✅ Success' : '❌ Failed (Expected)'}`);
+    console.log(`  Result: ${result.success ? "✅ Success" : "❌ Failed (Expected)"}`);
     if (!result.success) {
       console.log(`  Error message: ${result.message}`);
     }
@@ -237,7 +239,7 @@ async function runTests() {
   }
 
   console.log(`\n🎉 SPL Transfer Testing Complete!`);
-  console.log("=" .repeat(60));
+  console.log("=".repeat(60));
   console.log(`\n💡 Summary:`);
   console.log(`  - ✅ Optimized SPL transfer implementation tested`);
   console.log(`  - ✅ No on-chain data dependencies during construction`);
@@ -250,9 +252,9 @@ async function runTests() {
 // Run the test
 if (require.main === module) {
   runTests().catch(error => {
-    console.error('❌ Test suite failed:', error);
+    console.error("❌ Test suite failed:", error);
     process.exit(1);
   });
 }
 
-module.exports = { createSplTransfer, MockWalletProvider }; 
+module.exports = { createSplTransfer, MockWalletProvider };

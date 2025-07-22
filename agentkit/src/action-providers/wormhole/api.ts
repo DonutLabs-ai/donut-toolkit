@@ -2,7 +2,7 @@
  * Wormhole API client for cross-chain bridge operations.
  */
 export class WormholeAPI {
-  private readonly baseUrl = 'https://api.wormhole.com';
+  private readonly baseUrl = "https://api.wormhole.com";
 
   // Chain ID mapping for Wormhole
   private readonly chainIds: Record<string, number> = {
@@ -44,12 +44,14 @@ export class WormholeAPI {
     return Object.keys(this.chainIds).map(chain => ({
       name: chain,
       chainId: this.chainIds[chain],
-      supported: true
+      supported: true,
     }));
   }
 
   /**
    * Validate if chain is supported.
+   *
+   * @param chain
    */
   isChainSupported(chain: string): boolean {
     return chain.toLowerCase() in this.chainIds;
@@ -57,6 +59,8 @@ export class WormholeAPI {
 
   /**
    * Get Wormhole chain ID for a chain name.
+   *
+   * @param chain
    */
   getChainId(chain: string): number | null {
     return this.chainIds[chain.toLowerCase()] || null;
@@ -66,6 +70,13 @@ export class WormholeAPI {
    * Initiate a cross-chain transfer.
    * Note: This is a simplified implementation. Real implementation would
    * require integration with Wormhole SDK and wallet providers.
+   *
+   * @param params
+   * @param params.fromChain
+   * @param params.toChain
+   * @param params.tokenAddress
+   * @param params.amount
+   * @param params.recipientAddress
    */
   async initiateTransfer(params: {
     fromChain: string;
@@ -101,17 +112,22 @@ export class WormholeAPI {
         tokenAddress,
         amount,
         recipientAddress,
-        status: 'initiated',
-        message: 'Transfer initiated successfully. This is a mock response for demonstration purposes.'
+        status: "initiated",
+        message:
+          "Transfer initiated successfully. This is a mock response for demonstration purposes.",
       };
-
     } catch (error) {
-      throw new Error(`Failed to initiate transfer: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to initiate transfer: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Get transfer status.
+   *
+   * @param txHash
+   * @param fromChain
    */
   async getTransferStatus(txHash: string, fromChain: string): Promise<any> {
     try {
@@ -121,20 +137,27 @@ export class WormholeAPI {
       return {
         txHash,
         fromChain,
-        status: 'pending', // pending, completed, failed
+        status: "pending", // pending, completed, failed
         vaaId: null,
         destinationTxHash: null,
         estimatedCompletion: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes from now
-        message: 'Transfer is being processed. This is a mock response.'
+        message: "Transfer is being processed. This is a mock response.",
       };
-
     } catch (error) {
-      throw new Error(`Failed to get transfer status: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get transfer status: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Estimate transfer fees.
+   *
+   * @param params
+   * @param params.fromChain
+   * @param params.toChain
+   * @param params.tokenAddress
+   * @param params.amount
    */
   async estimateFees(params: {
     fromChain: string;
@@ -156,35 +179,39 @@ export class WormholeAPI {
 
       // Mock fee estimation
       // Real implementation would call Wormhole API or calculate based on current gas prices
-      const baseFee = fromChain === 'ethereum' ? '0.005' : '0.001'; // ETH or native token
-      const relayFee = '0.001'; // Additional relay fee
+      const baseFee = fromChain === "ethereum" ? "0.005" : "0.001"; // ETH or native token
+      const relayFee = "0.001"; // Additional relay fee
 
       return {
         fromChain,
         toChain,
         baseFee: {
           amount: baseFee,
-          currency: fromChain === 'ethereum' ? 'ETH' : 'native'
+          currency: fromChain === "ethereum" ? "ETH" : "native",
         },
         relayFee: {
           amount: relayFee,
-          currency: fromChain === 'ethereum' ? 'ETH' : 'native'
+          currency: fromChain === "ethereum" ? "ETH" : "native",
         },
         totalFee: {
           amount: (parseFloat(baseFee) + parseFloat(relayFee)).toString(),
-          currency: fromChain === 'ethereum' ? 'ETH' : 'native'
+          currency: fromChain === "ethereum" ? "ETH" : "native",
         },
-        estimatedTime: '5-15 minutes',
-        note: 'Fee estimates are approximate and may vary based on network conditions.'
+        estimatedTime: "5-15 minutes",
+        note: "Fee estimates are approximate and may vary based on network conditions.",
       };
-
     } catch (error) {
-      throw new Error(`Failed to estimate fees: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to estimate fees: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Get token information across chains.
+   *
+   * @param tokenAddress
+   * @param chain
    */
   async getTokenInfo(tokenAddress: string, chain: string): Promise<any> {
     try {
@@ -204,13 +231,14 @@ export class WormholeAPI {
         isWrapped: false, // Would check if this is a wrapped token
         originalChain: chain,
         decimals: 18, // Would fetch from token contract
-        symbol: 'TOKEN', // Would fetch from token contract
-        name: 'Token Name', // Would fetch from token contract
-        note: 'This is a mock response. Real implementation would fetch actual token data.'
+        symbol: "TOKEN", // Would fetch from token contract
+        name: "Token Name", // Would fetch from token contract
+        note: "This is a mock response. Real implementation would fetch actual token data.",
       };
-
     } catch (error) {
-      throw new Error(`Failed to get token info: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get token info: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
-} 
+}

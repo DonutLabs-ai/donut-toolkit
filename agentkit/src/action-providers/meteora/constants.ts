@@ -29,7 +29,7 @@ export const COMMON_TOKEN_MINTS = {
   WIF: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
   JUP: "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
   PYTH: "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3",
-  ORCA: "orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE"
+  ORCA: "orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE",
 };
 
 /**
@@ -51,14 +51,14 @@ export const MIN_POSITION_SIZE = 1000;
  * Fee tiers for Meteora DLMM pools (in basis points)
  */
 export const FEE_TIERS = [
-  1,   // 0.01%
-  5,   // 0.05%
-  10,  // 0.1%
-  25,  // 0.25%
-  50,  // 0.5%
+  1, // 0.01%
+  5, // 0.05%
+  10, // 0.1%
+  25, // 0.25%
+  50, // 0.5%
   100, // 1%
   300, // 3%
-  1000 // 10%
+  1000, // 10%
 ];
 
 /**
@@ -67,7 +67,7 @@ export const FEE_TIERS = [
 export enum PositionType {
   SPOT = "spot",
   BID = "bid",
-  ASK = "ask"
+  ASK = "ask",
 }
 
 /**
@@ -75,5 +75,5 @@ export enum PositionType {
  */
 export enum PoolStatus {
   ENABLED = "enabled",
-  DISABLED = "disabled"
+  DISABLED = "disabled",
 }

@@ -82,9 +82,9 @@ describe("GoplusActionProvider", () => {
         {
           name: "Raydium",
           liquidity: "50000000",
-          pair: "USDC/SOL"
-        }
-      ]
+          pair: "USDC/SOL",
+        },
+      ],
     };
 
     it("should return security analysis for valid token", async () => {
@@ -92,8 +92,8 @@ describe("GoplusActionProvider", () => {
         code: 200,
         message: "OK",
         result: {
-          [validTokenAddress]: mockTokenData
-        }
+          [validTokenAddress]: mockTokenData,
+        },
       });
 
       const result = await provider.getSolanaTokenSecurity({ tokenAddress: validTokenAddress });
@@ -110,7 +110,7 @@ describe("GoplusActionProvider", () => {
 
     it("should return error for invalid address", async () => {
       const invalidAddress = "invalid_address";
-      
+
       const result = await provider.getSolanaTokenSecurity({ tokenAddress: invalidAddress });
       const parsed = JSON.parse(result);
 
@@ -123,7 +123,7 @@ describe("GoplusActionProvider", () => {
       mockApiClient.solanaTokenSecurity.mockResolvedValue({
         code: 200,
         message: "OK",
-        result: {}
+        result: {},
       });
 
       const result = await provider.getSolanaTokenSecurity({ tokenAddress: validTokenAddress });
@@ -147,7 +147,7 @@ describe("GoplusActionProvider", () => {
   describe("batchSolanaTokenSecurity", () => {
     const validTokens = [
       "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
+      "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
     ];
 
     it("should analyze multiple tokens successfully", async () => {
@@ -162,7 +162,7 @@ describe("GoplusActionProvider", () => {
             cannot_buy: "0",
             cannot_sell_all: "0",
             buy_tax: "0",
-            sell_tax: "0"
+            sell_tax: "0",
           },
           [validTokens[1]]: {
             token_name: "USDT",
@@ -171,9 +171,9 @@ describe("GoplusActionProvider", () => {
             cannot_buy: "0",
             cannot_sell_all: "0",
             buy_tax: "0",
-            sell_tax: "0"
-          }
-        }
+            sell_tax: "0",
+          },
+        },
       };
 
       mockApiClient.solanaTokenSecurity.mockResolvedValue(mockResponse);
@@ -191,7 +191,7 @@ describe("GoplusActionProvider", () => {
 
     it("should handle invalid addresses in batch", async () => {
       const invalidTokens = ["invalid1", "invalid2"];
-      
+
       const result = await provider.batchSolanaTokenSecurity({ tokenAddresses: invalidTokens });
       const parsed = JSON.parse(result);
 
@@ -210,10 +210,10 @@ describe("GoplusActionProvider", () => {
             token_symbol: "USDC",
             is_true_token: "1",
             cannot_buy: "0",
-            cannot_sell_all: "0"
-          }
+            cannot_sell_all: "0",
+          },
           // Missing validTokens[1] to simulate partial failure
-        }
+        },
       };
 
       mockApiClient.solanaTokenSecurity.mockResolvedValue(mockResponse);
@@ -231,7 +231,7 @@ describe("GoplusActionProvider", () => {
   describe("compareTokenSecurity", () => {
     const tokensToCompare = [
       "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Safe token
-      "SomeRiskyToken123456789012345678901234567890"    // Risky token (mock)
+      "SomeRiskyToken123456789012345678901234567890", // Risky token (mock)
     ];
 
     it("should compare tokens and identify safest/riskiest", async () => {
@@ -245,7 +245,7 @@ describe("GoplusActionProvider", () => {
             cannot_buy: "0",
             cannot_sell_all: "0",
             buy_tax: "0",
-            sell_tax: "0"
+            sell_tax: "0",
           },
           [tokensToCompare[1]]: {
             token_name: "Risky Token",
@@ -253,9 +253,9 @@ describe("GoplusActionProvider", () => {
             cannot_buy: "1",
             cannot_sell_all: "1",
             buy_tax: "20",
-            sell_tax: "20"
-          }
-        }
+            sell_tax: "20",
+          },
+        },
       };
 
       mockApiClient.solanaTokenSecurity.mockResolvedValue(mockResponse);
@@ -279,8 +279,8 @@ describe("GoplusActionProvider", () => {
         message: "OK",
         result: {
           malicious: false,
-          details: "Address appears clean"
-        }
+          details: "Address appears clean",
+        },
       };
 
       mockApiClient.checkMaliciousAddress.mockResolvedValue(mockResponse);
@@ -309,7 +309,7 @@ describe("Utility Functions", () => {
       const validAddresses = [
         "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
         "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-        "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+        "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
       ];
 
       validAddresses.forEach(address => {
@@ -324,7 +324,7 @@ describe("Utility Functions", () => {
         "too_short",
         "way_too_long_address_that_exceeds_maximum_length_allowed_for_solana_addresses_which_should_fail_validation",
         "",
-        "contains@invalid#characters"
+        "contains@invalid#characters",
       ];
 
       invalidAddresses.forEach(address => {
@@ -350,7 +350,7 @@ describe("Utility Functions", () => {
         trading_cooldown: "0",
         transfer_pausable: "0",
         buy_tax: "0",
-        sell_tax: "0"
+        sell_tax: "0",
       };
 
       const score = calculateSecurityScore(safeTokenData);
@@ -374,7 +374,7 @@ describe("Utility Functions", () => {
         trading_cooldown: "1",
         transfer_pausable: "1",
         buy_tax: "15",
-        sell_tax: "15"
+        sell_tax: "15",
       };
 
       const score = calculateSecurityScore(riskyTokenData);
@@ -384,7 +384,7 @@ describe("Utility Functions", () => {
 
     it("should handle missing data gracefully", () => {
       const incompleteData: SolanaTokenSecurityData = {
-        token_name: "Test Token"
+        token_name: "Test Token",
       };
 
       const score = calculateSecurityScore(incompleteData);
@@ -392,4 +392,4 @@ describe("Utility Functions", () => {
       expect(score).toBeLessThanOrEqual(100);
     });
   });
-}); 
+});

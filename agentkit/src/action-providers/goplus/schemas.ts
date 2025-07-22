@@ -20,7 +20,7 @@ const SolanaAddressSchema = z
  */
 export const TokenSecuritySchema = z.object({
   tokenAddress: SolanaAddressSchema.describe(
-    "Solana token mint address to analyze for security risks and vulnerabilities"
+    "Solana token mint address to analyze for security risks and vulnerabilities",
   ),
 });
 
@@ -31,10 +31,11 @@ export const BatchTokenSecuritySchema = z.object({
   tokenAddresses: z
     .array(SolanaAddressSchema)
     .min(1, "At least one token address is required")
-    .max(REQUEST_CONFIG.MAX_BATCH_SIZE, `Maximum ${REQUEST_CONFIG.MAX_BATCH_SIZE} token addresses allowed`)
-    .describe(
-      "Array of Solana token mint addresses to analyze (max 20 tokens per request)"
-    ),
+    .max(
+      REQUEST_CONFIG.MAX_BATCH_SIZE,
+      `Maximum ${REQUEST_CONFIG.MAX_BATCH_SIZE} token addresses allowed`,
+    )
+    .describe("Array of Solana token mint addresses to analyze (max 20 tokens per request)"),
 });
 
 /**
@@ -42,7 +43,7 @@ export const BatchTokenSecuritySchema = z.object({
  */
 export const WalletSecuritySchema = z.object({
   walletAddress: SolanaAddressSchema.describe(
-    "Solana wallet address to analyze for security risks and suspicious activities"
+    "Solana wallet address to analyze for security risks and suspicious activities",
   ),
 });
 
@@ -54,9 +55,7 @@ export const TokenComparisonSchema = z.object({
     .array(SolanaAddressSchema)
     .min(2, "At least two token addresses are required for comparison")
     .max(10, "Maximum 10 token addresses allowed for comparison")
-    .describe(
-      "Array of Solana token mint addresses to compare (2-10 tokens)"
-    ),
+    .describe("Array of Solana token mint addresses to compare (2-10 tokens)"),
 });
 
 /**
@@ -64,7 +63,7 @@ export const TokenComparisonSchema = z.object({
  */
 export const MaliciousAddressCheckSchema = z.object({
   address: SolanaAddressSchema.describe(
-    "Solana address to check against malicious address database"
+    "Solana address to check against malicious address database",
   ),
 });
 
@@ -73,7 +72,7 @@ export const MaliciousAddressCheckSchema = z.object({
  */
 export const TokenReputationSchema = z.object({
   tokenAddress: SolanaAddressSchema.describe(
-    "Solana token mint address to get reputation and community data for"
+    "Solana token mint address to get reputation and community data for",
   ),
 });
 
@@ -99,20 +98,11 @@ export const SecurityTrendsSchema = z.object({
  */
 export const DetailedTokenAnalysisSchema = z.object({
   tokenAddress: SolanaAddressSchema.describe(
-    "Solana token mint address for detailed security analysis"
+    "Solana token mint address for detailed security analysis",
   ),
-  includeHolders: z
-    .boolean()
-    .default(false)
-    .describe("Include holder distribution analysis"),
-  includeLiquidity: z
-    .boolean()
-    .default(true)
-    .describe("Include liquidity pool analysis"),
-  includeMarketData: z
-    .boolean()
-    .default(false)
-    .describe("Include market and trading data"),
+  includeHolders: z.boolean().default(false).describe("Include holder distribution analysis"),
+  includeLiquidity: z.boolean().default(true).describe("Include liquidity pool analysis"),
+  includeMarketData: z.boolean().default(false).describe("Include market and trading data"),
 });
 
 /**
@@ -125,4 +115,4 @@ export type TokenComparisonInput = z.infer<typeof TokenComparisonSchema>;
 export type MaliciousAddressCheckInput = z.infer<typeof MaliciousAddressCheckSchema>;
 export type TokenReputationInput = z.infer<typeof TokenReputationSchema>;
 export type SecurityTrendsInput = z.infer<typeof SecurityTrendsSchema>;
-export type DetailedTokenAnalysisInput = z.infer<typeof DetailedTokenAnalysisSchema>; 
+export type DetailedTokenAnalysisInput = z.infer<typeof DetailedTokenAnalysisSchema>;

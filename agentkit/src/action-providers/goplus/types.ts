@@ -3,12 +3,12 @@ import { RISK_LEVELS, SECURITY_THRESHOLDS } from "./constants";
 /**
  * Risk level type
  */
-export type RiskLevel = typeof RISK_LEVELS[keyof typeof RISK_LEVELS];
+export type RiskLevel = (typeof RISK_LEVELS)[keyof typeof RISK_LEVELS];
 
 /**
  * Security score threshold type
  */
-export type SecurityThreshold = typeof SECURITY_THRESHOLDS[keyof typeof SECURITY_THRESHOLDS];
+export type SecurityThreshold = (typeof SECURITY_THRESHOLDS)[keyof typeof SECURITY_THRESHOLDS];
 
 /**
  * GoPlus API response for Solana token security
@@ -30,41 +30,41 @@ export interface SolanaTokenSecurityData {
   token_symbol?: string;
   holder_count?: string;
   total_supply?: string;
-  
+
   // Security indicators (0, 1, or null)
   is_true_token?: string;
   is_airdrop_scam?: string;
   trust_list?: string;
-  
+
   // Ownership and contract risks
   owner_address?: string;
   creator_address?: string;
   is_open_source?: string;
-  
+
   // Trading risks
   cannot_buy?: string;
   cannot_sell_all?: string;
   slippage_modifiable?: string;
   trading_cooldown?: string;
-  
+
   // Economic model risks
   transfer_pausable?: string;
   can_take_back_ownership?: string;
   owner_change_balance?: string;
   hidden_owner?: string;
   selfdestruct?: string;
-  
+
   // Tax information
   buy_tax?: string;
   sell_tax?: string;
-  
+
   // Liquidity information
   dex?: Array<{
     name: string;
     liquidity: string;
     pair: string;
   }>;
-  
+
   // Additional metadata
   note?: string;
 }
@@ -77,23 +77,23 @@ export interface ProcessedTokenSecurity {
   tokenAddress: string;
   tokenName?: string;
   tokenSymbol?: string;
-  
+
   // Calculated security metrics
   securityScore: number;
   riskLevel: RiskLevel;
-  
+
   // Risk analysis
   riskFactors: string[];
   safetyIndicators: string[];
   warnings: string[];
   recommendations: string[];
-  
+
   // Trading info
   buyTax?: number;
   sellTax?: number;
   canBuy: boolean;
   canSellAll: boolean;
-  
+
   // Liquidity info
   liquidityInfo?: {
     totalLiquidity: number;
@@ -103,7 +103,7 @@ export interface ProcessedTokenSecurity {
       pair: string;
     }>;
   };
-  
+
   // Additional metadata
   holderCount?: number;
   totalSupply?: string;
@@ -157,17 +157,17 @@ export interface GoplusActionProviderConfig {
    * Custom API base URL (optional)
    */
   apiBaseUrl?: string;
-  
+
   /**
    * Request timeout in milliseconds (optional)
    */
   timeout?: number;
-  
+
   /**
    * Maximum number of retries for failed requests (optional)
    */
   maxRetries?: number;
-  
+
   /**
    * Enable detailed logging (optional)
    */
@@ -218,4 +218,4 @@ export interface TokenComparisonResult {
     averageScore: number;
   };
   individualResults: ProcessedTokenSecurity[];
-} 
+}

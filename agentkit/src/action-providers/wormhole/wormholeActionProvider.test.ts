@@ -62,7 +62,7 @@ describe("WormholeActionProvider", () => {
         amount: "100",
         recipientAddress: "7gWBbPcQMzJX1s6s2dg1kcFQs5A1L3X4G9e8KjpYZ2Kh",
         status: "initiated",
-        message: "Transfer initiated successfully"
+        message: "Transfer initiated successfully",
       };
 
       mockApi.isChainSupported.mockReturnValue(true);
@@ -73,7 +73,7 @@ describe("WormholeActionProvider", () => {
         toChain: "solana",
         tokenAddress: "0x123",
         amount: "100",
-        recipientAddress: "7gWBbPcQMzJX1s6s2dg1kcFQs5A1L3X4G9e8KjpYZ2Kh"
+        recipientAddress: "7gWBbPcQMzJX1s6s2dg1kcFQs5A1L3X4G9e8KjpYZ2Kh",
       });
 
       const parsed = JSON.parse(result);
@@ -91,7 +91,7 @@ describe("WormholeActionProvider", () => {
         toChain: "ethereum",
         tokenAddress: "0x123",
         amount: "100",
-        recipientAddress: "0x456"
+        recipientAddress: "0x456",
       });
 
       const parsed = JSON.parse(result);
@@ -102,14 +102,14 @@ describe("WormholeActionProvider", () => {
     });
 
     it("should reject unsupported source chain", async () => {
-      mockApi.isChainSupported.mockImplementation((chain) => chain !== "unsupported");
+      mockApi.isChainSupported.mockImplementation(chain => chain !== "unsupported");
 
       const result = await provider.transferToken({
         fromChain: "unsupported",
         toChain: "ethereum",
         tokenAddress: "0x123",
         amount: "100",
-        recipientAddress: "0x456"
+        recipientAddress: "0x456",
       });
 
       const parsed = JSON.parse(result);
@@ -127,7 +127,7 @@ describe("WormholeActionProvider", () => {
         toChain: "solana",
         tokenAddress: "0x123",
         amount: "0",
-        recipientAddress: "7gWBbPcQMzJX1s6s2dg1kcFQs5A1L3X4G9e8KjpYZ2Kh"
+        recipientAddress: "7gWBbPcQMzJX1s6s2dg1kcFQs5A1L3X4G9e8KjpYZ2Kh",
       });
 
       const parsed = JSON.parse(result);
@@ -145,7 +145,7 @@ describe("WormholeActionProvider", () => {
         toChain: "solana",
         tokenAddress: "0x123",
         amount: "100",
-        recipientAddress: "7gWBbPcQMzJX1s6s2dg1kcFQs5A1L3X4G9e8KjpYZ2Kh"
+        recipientAddress: "7gWBbPcQMzJX1s6s2dg1kcFQs5A1L3X4G9e8KjpYZ2Kh",
       });
 
       const parsed = JSON.parse(result);
@@ -164,7 +164,7 @@ describe("WormholeActionProvider", () => {
         vaaId: null,
         destinationTxHash: null,
         estimatedCompletion: "2024-01-01T12:00:00Z",
-        message: "Transfer is being processed"
+        message: "Transfer is being processed",
       };
 
       mockApi.isChainSupported.mockReturnValue(true);
@@ -172,7 +172,7 @@ describe("WormholeActionProvider", () => {
 
       const result = await provider.getTransferStatus({
         txHash: "0xabcdef",
-        fromChain: "ethereum"
+        fromChain: "ethereum",
       });
 
       const parsed = JSON.parse(result);
@@ -188,7 +188,7 @@ describe("WormholeActionProvider", () => {
 
       const result = await provider.getTransferStatus({
         txHash: "0xabcdef",
-        fromChain: "unsupported"
+        fromChain: "unsupported",
       });
 
       const parsed = JSON.parse(result);
@@ -203,7 +203,7 @@ describe("WormholeActionProvider", () => {
       const mockChains = [
         { name: "ethereum", chainId: 2, supported: true },
         { name: "solana", chainId: 1, supported: true },
-        { name: "polygon", chainId: 5, supported: true }
+        { name: "polygon", chainId: 5, supported: true },
       ];
 
       mockApi.getSupportedChains.mockReturnValue(mockChains);
@@ -224,7 +224,7 @@ describe("WormholeActionProvider", () => {
       const mockTokenInfo = {
         originalToken: {
           address: "0x123",
-          chain: "ethereum"
+          chain: "ethereum",
         },
         wrappedTokens: [],
         isWrapped: false,
@@ -232,7 +232,7 @@ describe("WormholeActionProvider", () => {
         decimals: 18,
         symbol: "TOKEN",
         name: "Test Token",
-        note: "Mock token info"
+        note: "Mock token info",
       };
 
       mockApi.isChainSupported.mockReturnValue(true);
@@ -240,7 +240,7 @@ describe("WormholeActionProvider", () => {
 
       const result = await provider.getTokenInfo({
         tokenAddress: "0x123",
-        chain: "ethereum"
+        chain: "ethereum",
       });
 
       const parsed = JSON.parse(result);
@@ -256,7 +256,7 @@ describe("WormholeActionProvider", () => {
 
       const result = await provider.getTokenInfo({
         tokenAddress: "0x123",
-        chain: "unsupported"
+        chain: "unsupported",
       });
 
       const parsed = JSON.parse(result);
@@ -275,7 +275,7 @@ describe("WormholeActionProvider", () => {
         relayFee: { amount: "0.001", currency: "ETH" },
         totalFee: { amount: "0.006", currency: "ETH" },
         estimatedTime: "5-15 minutes",
-        note: "Mock fee estimate"
+        note: "Mock fee estimate",
       };
 
       mockApi.isChainSupported.mockReturnValue(true);
@@ -285,7 +285,7 @@ describe("WormholeActionProvider", () => {
         fromChain: "ethereum",
         toChain: "solana",
         tokenAddress: "0x123",
-        amount: "100"
+        amount: "100",
       });
 
       const parsed = JSON.parse(result);
@@ -302,7 +302,7 @@ describe("WormholeActionProvider", () => {
         fromChain: "ethereum",
         toChain: "ethereum",
         tokenAddress: "0x123",
-        amount: "100"
+        amount: "100",
       });
 
       const parsed = JSON.parse(result);
@@ -319,7 +319,7 @@ describe("WormholeActionProvider", () => {
         fromChain: "ethereum",
         toChain: "solana",
         tokenAddress: "0x123",
-        amount: "100"
+        amount: "100",
       });
 
       const parsed = JSON.parse(result);
@@ -328,4 +328,4 @@ describe("WormholeActionProvider", () => {
       expect(parsed.error).toBe("Fee Estimation Error");
     });
   });
-}); 
+});

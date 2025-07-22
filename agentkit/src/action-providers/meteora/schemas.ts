@@ -5,25 +5,11 @@ import { z } from "zod";
  */
 export const CreatePositionSchema = z
   .object({
-    poolAddress: z
-      .string()
-      .describe("The address of the Meteora DLMM pool to create position in"),
-    tokenXAmount: z
-      .number()
-      .positive()
-      .describe("Amount of token X to deposit (in whole units)"),
-    tokenYAmount: z
-      .number()
-      .positive()
-      .describe("Amount of token Y to deposit (in whole units)"),
-    lowerBinId: z
-      .number()
-      .int()
-      .describe("Lower bin ID for the position range"),
-    upperBinId: z
-      .number()
-      .int()
-      .describe("Upper bin ID for the position range"),
+    poolAddress: z.string().describe("The address of the Meteora DLMM pool to create position in"),
+    tokenXAmount: z.number().positive().describe("Amount of token X to deposit (in whole units)"),
+    tokenYAmount: z.number().positive().describe("Amount of token Y to deposit (in whole units)"),
+    lowerBinId: z.number().int().describe("Lower bin ID for the position range"),
+    upperBinId: z.number().int().describe("Upper bin ID for the position range"),
     slippageBps: z
       .number()
       .int()
@@ -39,9 +25,7 @@ export const CreatePositionSchema = z
  */
 export const ClosePositionSchema = z
   .object({
-    positionAddress: z
-      .string()
-      .describe("The address of the position to close"),
+    positionAddress: z.string().describe("The address of the position to close"),
     basisPointsToClose: z
       .number()
       .int()
@@ -64,14 +48,8 @@ export const AddLiquiditySchema = z
     positionAddress: z
       .string()
       .describe("The address of the existing position to add liquidity to"),
-    tokenXAmount: z
-      .number()
-      .positive()
-      .describe("Amount of token X to add (in whole units)"),
-    tokenYAmount: z
-      .number()
-      .positive()
-      .describe("Amount of token Y to add (in whole units)"),
+    tokenXAmount: z.number().positive().describe("Amount of token X to add (in whole units)"),
+    tokenYAmount: z.number().positive().describe("Amount of token Y to add (in whole units)"),
     slippageBps: z
       .number()
       .int()
@@ -87,9 +65,7 @@ export const AddLiquiditySchema = z
  */
 export const RemoveLiquiditySchema = z
   .object({
-    positionAddress: z
-      .string()
-      .describe("The address of the position to remove liquidity from"),
+    positionAddress: z.string().describe("The address of the position to remove liquidity from"),
     basisPointsToRemove: z
       .number()
       .int()
@@ -108,9 +84,7 @@ export const RemoveLiquiditySchema = z
  */
 export const ClaimFeesSchema = z
   .object({
-    positionAddress: z
-      .string()
-      .describe("The address of the position to claim fees from"),
+    positionAddress: z.string().describe("The address of the position to claim fees from"),
   })
   .describe("Claim fees from a position on a Meteora DLMM pool");
 
@@ -119,9 +93,7 @@ export const ClaimFeesSchema = z
  */
 export const GetPositionInfoSchema = z
   .object({
-    positionAddress: z
-      .string()
-      .describe("The address of the position to get information for"),
+    positionAddress: z.string().describe("The address of the position to get information for"),
   })
   .describe("Get information about a position on a Meteora DLMM pool");
 
@@ -130,9 +102,7 @@ export const GetPositionInfoSchema = z
  */
 export const GetPoolInfoSchema = z
   .object({
-    poolAddress: z
-      .string()
-      .describe("The address of the Meteora DLMM pool to get information for"),
+    poolAddress: z.string().describe("The address of the Meteora DLMM pool to get information for"),
   })
   .describe("Get information about a Meteora DLMM pool");
 
@@ -153,14 +123,8 @@ export const ListUserPositionsSchema = z
  */
 export const GetAvailablePoolsSchema = z
   .object({
-    tokenX: z
-      .string()
-      .optional()
-      .describe("Filter pools by token X mint address (optional)"),
-    tokenY: z
-      .string()
-      .optional()
-      .describe("Filter pools by token Y mint address (optional)"),
+    tokenX: z.string().optional().describe("Filter pools by token X mint address (optional)"),
+    tokenY: z.string().optional().describe("Filter pools by token Y mint address (optional)"),
     limit: z
       .number()
       .int()
@@ -176,13 +140,8 @@ export const GetAvailablePoolsSchema = z
  */
 export const GetBinInfoSchema = z
   .object({
-    poolAddress: z
-      .string()
-      .describe("The address of the Meteora DLMM pool"),
-    binId: z
-      .number()
-      .int()
-      .describe("The bin ID to get information for"),
+    poolAddress: z.string().describe("The address of the Meteora DLMM pool"),
+    binId: z.number().int().describe("The bin ID to get information for"),
   })
   .describe("Get information about a specific bin in a Meteora DLMM pool");
 
@@ -191,8 +150,6 @@ export const GetBinInfoSchema = z
  */
 export const GetPoolPriceSchema = z
   .object({
-    poolAddress: z
-      .string()
-      .describe("The address of the Meteora DLMM pool to get price for"),
+    poolAddress: z.string().describe("The address of the Meteora DLMM pool to get price for"),
   })
   .describe("Get current price information for a Meteora DLMM pool");

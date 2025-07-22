@@ -5,7 +5,14 @@ import { ActionProvider } from "../actionProvider";
 import { Network } from "../../network";
 import { SvmWalletProvider } from "../../wallet-providers/svmWalletProvider";
 import { CreateAction } from "../actionDecorator";
-import { PublicKey, Connection, Transaction, TransactionInstruction, VersionedTransaction, MessageV0 } from "@solana/web3.js";
+import {
+  PublicKey,
+  Connection,
+  Transaction,
+  TransactionInstruction,
+  VersionedTransaction,
+  MessageV0,
+} from "@solana/web3.js";
 import axios from "axios";
 import {
   CreatePositionSchema,
@@ -30,10 +37,10 @@ import {
 
 /**
  * MeteoraDLMMActionProvider handles interactions with Meteora DLMM pools on Solana.
- * 
+ *
  * Meteora DLMM (Dynamic Liquidity Market Maker) is a next-generation AMM that uses
  * discretized liquidity bins to provide concentrated liquidity with improved capital efficiency.
- * 
+ *
  * Key features:
  * - Create liquidity positions in specific price ranges
  * - Add/remove liquidity from existing positions
@@ -44,6 +51,9 @@ import {
 export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider> {
   private connection: Connection;
 
+  /**
+   *
+   */
   constructor() {
     super("meteora-dlmm", []);
     this.connection = new Connection("https://api.mainnet-beta.solana.com");
@@ -51,7 +61,7 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
 
   /**
    * Creates a new position on a Meteora DLMM pool
-   * 
+   *
    * @param walletProvider - The wallet provider for user public key
    * @param args - Position creation parameters
    * @returns Result message with unsigned transaction in base64 format
@@ -83,7 +93,7 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
   })
   async createPosition(
     walletProvider: SvmWalletProvider,
-    args: z.infer<typeof CreatePositionSchema>
+    args: z.infer<typeof CreatePositionSchema>,
   ): Promise<string> {
     try {
       const userPublicKey = walletProvider.getPublicKey();
@@ -96,7 +106,7 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
         args.tokenYAmount,
         args.lowerBinId,
         args.upperBinId,
-        args.slippageBps
+        args.slippageBps,
       );
 
       if (!unsignedTransaction) {
@@ -110,8 +120,8 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
             tokenYAmount: args.tokenYAmount,
             lowerBinId: args.lowerBinId,
             upperBinId: args.upperBinId,
-            slippageBps: args.slippageBps
-          }
+            slippageBps: args.slippageBps,
+          },
         );
 
         return JSON.stringify({
@@ -125,7 +135,7 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
             tokenYAmount: args.tokenYAmount,
             lowerBinId: args.lowerBinId,
             upperBinId: args.upperBinId,
-            slippageBps: args.slippageBps
+            slippageBps: args.slippageBps,
           },
           transactionType: "meteora_create_position",
           poolAddress: args.poolAddress,
@@ -133,7 +143,7 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
           tokenYAmount: args.tokenYAmount,
           lowerBinId: args.lowerBinId,
           upperBinId: args.upperBinId,
-          slippageBps: args.slippageBps
+          slippageBps: args.slippageBps,
         });
       }
 
@@ -147,21 +157,20 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
         tokenYAmount: args.tokenYAmount,
         lowerBinId: args.lowerBinId,
         upperBinId: args.upperBinId,
-        slippageBps: args.slippageBps
+        slippageBps: args.slippageBps,
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "Failed to create position",
-        message: `Error: ${error}`
+        message: `Error: ${error}`,
       });
     }
   }
 
   /**
    * Closes an existing position on a Meteora DLMM pool
-   * 
+   *
    * @param walletProvider - The wallet provider for user public key
    * @param args - Position closing parameters
    * @returns Result message with unsigned transaction in base64 format
@@ -189,7 +198,7 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
   })
   async closePosition(
     walletProvider: SvmWalletProvider,
-    args: z.infer<typeof ClosePositionSchema>
+    args: z.infer<typeof ClosePositionSchema>,
   ): Promise<string> {
     try {
       const userPublicKey = walletProvider.getPublicKey();
@@ -199,7 +208,7 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
         userPublicKey,
         args.positionAddress,
         args.basisPointsToClose,
-        args.shouldClaimAndClose
+        args.shouldClaimAndClose,
       );
 
       if (!unsignedTransaction) {
@@ -210,8 +219,8 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
             user: userPublicKey.toString(),
             position: args.positionAddress,
             basisPointsToClose: args.basisPointsToClose,
-            shouldClaimAndClose: args.shouldClaimAndClose
-          }
+            shouldClaimAndClose: args.shouldClaimAndClose,
+          },
         );
 
         const percentageClosed = args.basisPointsToClose / 100;
@@ -224,12 +233,12 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
             user: userPublicKey.toString(),
             position: args.positionAddress,
             basisPointsToClose: args.basisPointsToClose,
-            shouldClaimAndClose: args.shouldClaimAndClose
+            shouldClaimAndClose: args.shouldClaimAndClose,
           },
           transactionType: "meteora_close_position",
           positionAddress: args.positionAddress,
           percentageClosed,
-          claimedFees: args.shouldClaimAndClose
+          claimedFees: args.shouldClaimAndClose,
         });
       }
 
@@ -242,21 +251,20 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
         transactionType: "meteora_close_position",
         positionAddress: args.positionAddress,
         percentageClosed,
-        claimedFees: args.shouldClaimAndClose
+        claimedFees: args.shouldClaimAndClose,
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "Failed to close position",
-        message: `Error: ${error}`
+        message: `Error: ${error}`,
       });
     }
   }
 
   /**
    * Gets information about a specific Meteora DLMM pool
-   * 
+   *
    * @param walletProvider - The wallet provider (not used for read operations)
    * @param args - Pool information query parameters
    * @returns Pool information including tokens, fees, and statistics
@@ -282,7 +290,7 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
   })
   async getPoolInfo(
     walletProvider: SvmWalletProvider,
-    args: z.infer<typeof GetPoolInfoSchema>
+    args: z.infer<typeof GetPoolInfoSchema>,
   ): Promise<string> {
     try {
       const poolInfo = await this.getPoolInformation(args.poolAddress);
@@ -291,28 +299,27 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
         return JSON.stringify({
           success: false,
           error: "Pool not found",
-          message: "Could not retrieve pool information"
+          message: "Could not retrieve pool information",
         });
       }
 
       return JSON.stringify({
         success: true,
         pool: poolInfo,
-        message: "Pool information retrieved successfully"
+        message: "Pool information retrieved successfully",
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "Failed to get pool information",
-        message: `Error: ${error}`
+        message: `Error: ${error}`,
       });
     }
   }
 
   /**
    * Gets information about a specific position
-   * 
+   *
    * @param walletProvider - The wallet provider (not used for read operations)
    * @param args - Position information query parameters
    * @returns Position information including liquidity, fees, and status
@@ -338,7 +345,7 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
   })
   async getPositionInfo(
     walletProvider: SvmWalletProvider,
-    args: z.infer<typeof GetPositionInfoSchema>
+    args: z.infer<typeof GetPositionInfoSchema>,
   ): Promise<string> {
     try {
       const positionInfo = await this.getPositionInformation(args.positionAddress);
@@ -347,28 +354,27 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
         return JSON.stringify({
           success: false,
           error: "Position not found",
-          message: "Could not retrieve position information"
+          message: "Could not retrieve position information",
         });
       }
 
       return JSON.stringify({
         success: true,
         position: positionInfo,
-        message: "Position information retrieved successfully"
+        message: "Position information retrieved successfully",
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "Failed to get position information",
-        message: `Error: ${error}`
+        message: `Error: ${error}`,
       });
     }
   }
 
   /**
    * Lists all positions for a user
-   * 
+   *
    * @param walletProvider - The wallet provider to get user address
    * @param args - User positions query parameters
    * @returns Array of user positions with details
@@ -393,7 +399,7 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
   })
   async listUserPositions(
     walletProvider: SvmWalletProvider,
-    args: z.infer<typeof ListUserPositionsSchema>
+    args: z.infer<typeof ListUserPositionsSchema>,
   ): Promise<string> {
     try {
       const userAddress = args.userAddress || walletProvider.getAddress();
@@ -404,21 +410,20 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
         positions: positions || [],
         userAddress,
         count: positions?.length || 0,
-        message: `Found ${positions?.length || 0} positions for user`
+        message: `Found ${positions?.length || 0} positions for user`,
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "Failed to list user positions",
-        message: `Error: ${error}`
+        message: `Error: ${error}`,
       });
     }
   }
 
   /**
    * Gets available pools with optional filtering
-   * 
+   *
    * @param walletProvider - The wallet provider (not used for read operations)
    * @param args - Pool filtering parameters
    * @returns Array of available pools matching the criteria
@@ -445,14 +450,10 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
   })
   async getAvailablePools(
     walletProvider: SvmWalletProvider,
-    args: z.infer<typeof GetAvailablePoolsSchema>
+    args: z.infer<typeof GetAvailablePoolsSchema>,
   ): Promise<string> {
     try {
-      const pools = await this.getAvailablePoolsList(
-        args.tokenX,
-        args.tokenY,
-        args.limit
-      );
+      const pools = await this.getAvailablePoolsList(args.tokenX, args.tokenY, args.limit);
 
       return JSON.stringify({
         success: true,
@@ -461,16 +462,15 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
         filters: {
           tokenX: args.tokenX,
           tokenY: args.tokenY,
-          limit: args.limit
+          limit: args.limit,
         },
-        message: `Found ${pools?.length || 0} available pools`
+        message: `Found ${pools?.length || 0} available pools`,
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "Failed to get available pools",
-        message: `Error: ${error}`
+        message: `Error: ${error}`,
       });
     }
   }
@@ -480,6 +480,14 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
   /**
    * Builds unsigned transaction for creating a position
    * Makes API call to Meteora to get the unsigned transaction
+   *
+   * @param userPublicKey
+   * @param poolAddress
+   * @param tokenXAmount
+   * @param tokenYAmount
+   * @param lowerBinId
+   * @param upperBinId
+   * @param slippageBps
    */
   private async buildCreatePositionTransaction(
     userPublicKey: PublicKey,
@@ -488,7 +496,7 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
     tokenYAmount: number,
     lowerBinId: number,
     upperBinId: number,
-    slippageBps: number
+    slippageBps: number,
   ): Promise<string | null> {
     try {
       const requestBody = {
@@ -498,18 +506,14 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
         tokenYAmount,
         lowerBinId,
         upperBinId,
-        slippageBps
+        slippageBps,
       };
 
-      const response = await axios.post(
-        `${METEORA_API_BASE_URL}/create-position`,
-        requestBody,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await axios.post(`${METEORA_API_BASE_URL}/create-position`, requestBody, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       return response.data.transaction || null;
     } catch (error) {
@@ -521,30 +525,31 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
   /**
    * Builds unsigned transaction for closing a position
    * Makes API call to Meteora to get the unsigned transaction
+   *
+   * @param userPublicKey
+   * @param positionAddress
+   * @param basisPointsToClose
+   * @param shouldClaimAndClose
    */
   private async buildClosePositionTransaction(
     userPublicKey: PublicKey,
     positionAddress: string,
     basisPointsToClose: number,
-    shouldClaimAndClose: boolean
+    shouldClaimAndClose: boolean,
   ): Promise<string | null> {
     try {
       const requestBody = {
         user: userPublicKey.toString(),
         position: positionAddress,
         basisPointsToClose,
-        shouldClaimAndClose
+        shouldClaimAndClose,
       };
 
-      const response = await axios.post(
-        `${METEORA_API_BASE_URL}/close-position`,
-        requestBody,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await axios.post(`${METEORA_API_BASE_URL}/close-position`, requestBody, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       return response.data.transaction || null;
     } catch (error) {
@@ -555,6 +560,8 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
 
   /**
    * Gets pool information from Meteora API
+   *
+   * @param poolAddress
    */
   private async getPoolInformation(poolAddress: string): Promise<any> {
     try {
@@ -568,6 +575,8 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
 
   /**
    * Gets position information from Meteora API
+   *
+   * @param positionAddress
    */
   private async getPositionInformation(positionAddress: string): Promise<any> {
     try {
@@ -581,6 +590,8 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
 
   /**
    * Gets user positions from Meteora API
+   *
+   * @param userAddress
    */
   private async getUserPositions(userAddress: string): Promise<any[]> {
     try {
@@ -594,17 +605,21 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
 
   /**
    * Gets available pools from Meteora API
+   *
+   * @param tokenX
+   * @param tokenY
+   * @param limit
    */
   private async getAvailablePoolsList(
     tokenX?: string,
     tokenY?: string,
-    limit: number = 20
+    limit: number = 20,
   ): Promise<any[]> {
     try {
       const params = new URLSearchParams();
-      if (tokenX) params.append('tokenX', tokenX);
-      if (tokenY) params.append('tokenY', tokenY);
-      params.append('limit', limit.toString());
+      if (tokenX) params.append("tokenX", tokenX);
+      if (tokenY) params.append("tokenY", tokenY);
+      params.append("limit", limit.toString());
 
       const response = await axios.get(`${METEORA_API_BASE_URL}/pools?${params}`);
       return response.data;
@@ -617,11 +632,11 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
   /**
    * Generates a mock unsigned transaction for testing when the real API is not available
    * Returns a properly formatted Solana transaction in base64 format
+   *
+   * @param transactionType
+   * @param requestData
    */
-  private generateMockUnsignedTransaction(
-    transactionType: string,
-    requestData: any
-  ): string {
+  private generateMockUnsignedTransaction(transactionType: string, requestData: any): string {
     try {
       // Create a minimal valid Solana transaction structure
       const mockInstruction = new TransactionInstruction({
@@ -638,7 +653,7 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
             isWritable: false,
           },
         ],
-        data: Buffer.from(transactionType, 'utf8'), // Simple instruction data
+        data: Buffer.from(transactionType, "utf8"), // Simple instruction data
       });
 
       // Build a proper VersionedTransaction
@@ -647,31 +662,37 @@ export class MeteoraDLMMActionProvider extends ActionProvider<SvmWalletProvider>
           payerKey: new PublicKey(requestData.user || requestData.position),
           instructions: [mockInstruction],
           recentBlockhash: "11111111111111111111111111111111", // Placeholder blockhash
-        })
+        }),
       );
 
       // Return the properly serialized transaction as base64
       return Buffer.from(transaction.serialize()).toString("base64");
     } catch (error) {
       console.error("Failed to generate mock transaction:", error);
-      
+
       // Fallback: return a clear error message in the expected format
-      return Buffer.from(JSON.stringify({
-        error: "Mock transaction generation failed",
-        message: "Real API call required for valid transaction",
-        transactionType: transactionType,
-        note: "This is a fallback response when transaction generation fails"
-      })).toString("base64");
+      return Buffer.from(
+        JSON.stringify({
+          error: "Mock transaction generation failed",
+          message: "Real API call required for valid transaction",
+          transactionType: transactionType,
+          note: "This is a fallback response when transaction generation fails",
+        }),
+      ).toString("base64");
     }
   }
 
   /**
    * Checks if the action provider supports the given network
+   *
+   * @param network
    */
   supportsNetwork(network: Network): boolean {
-    return network.protocolFamily === "svm" && 
-           network.networkId !== undefined && 
-           SUPPORTED_NETWORKS.includes(network.networkId);
+    return (
+      network.protocolFamily === "svm" &&
+      network.networkId !== undefined &&
+      SUPPORTED_NETWORKS.includes(network.networkId)
+    );
   }
 }
 

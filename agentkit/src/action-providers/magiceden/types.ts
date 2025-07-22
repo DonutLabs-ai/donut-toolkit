@@ -7,13 +7,13 @@ export interface MagicEdenActionProviderConfig {
    * If not provided, will use MAGIC_EDEN_API_KEY environment variable
    */
   apiKey?: string;
-  
+
   /**
    * Base URL for Magic Eden API (optional)
    * Defaults to https://api-mainnet.magiceden.dev/v2
    */
   baseUrl?: string;
-  
+
   /**
    * Request timeout in milliseconds (optional)
    * Defaults to 30000 (30 seconds)

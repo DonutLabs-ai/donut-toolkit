@@ -2,9 +2,9 @@
  * Usage examples for AgentKit MCP Extension without CDP API Keys
  */
 
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema, Tool, CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { Server } from "@modelcontextprotocol/sdk/server/index";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio";
+import { CallToolRequestSchema, ListToolsRequestSchema, Tool, CallToolResult } from "@modelcontextprotocol/sdk/types";
 import { 
   getMcpTools, 
   getMcpToolsFromProviders,
@@ -13,7 +13,6 @@ import {
 import { 
   walletActionProvider,
   splActionProvider,
-  alchemyTokenPricesActionProvider,
   defillamaActionProvider,
   dexscreenerActionProvider,
   Network,
@@ -52,7 +51,6 @@ export async function createSolanaMcpServer() {
  */
 export async function createReadOnlyMcpServer() {
   const { tools, toolHandler } = await getMcpToolsFromProviders([
-    alchemyTokenPricesActionProvider(),
     defillamaActionProvider(),
     dexscreenerActionProvider(),
   ]);

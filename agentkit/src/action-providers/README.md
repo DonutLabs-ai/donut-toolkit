@@ -24,7 +24,6 @@ action-providers/
 ├── x402/                        # X402 支付协议
 │
 ├── 🟡 数据查询 Providers (跨链兼容)
-├── alchemy/                     # Alchemy API 集成
 ├── defillama/                   # DefiLlama 数据
 ├── dexscreener/                 # DEX 交易数据
 ├── messari/                     # Messari 市场分析
@@ -391,7 +390,6 @@ readOnlyDataExample().catch(console.error);
 ```bash
 # .env 文件
 SOLANA_PRIVATE_KEY=your_base58_private_key
-ALCHEMY_API_KEY=your_alchemy_api_key
 MESSARI_API_KEY=your_messari_api_key
 ```
 

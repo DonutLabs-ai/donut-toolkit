@@ -24,6 +24,9 @@ interface CreateTokenMetadata {
  * All actions return unsigned transaction messages for manual signing.
  */
 export class PumpfunActionProvider extends ActionProvider<SvmWalletProvider> {
+  /**
+   *
+   */
   constructor() {
     super("pumpfun", []);
   }
@@ -266,9 +269,10 @@ export class PumpfunActionProvider extends ActionProvider<SvmWalletProvider> {
 
       return JSON.stringify({
         success: true,
-        message: args.amountToBuyInSol > 0 
-          ? "Successfully created unsigned token creation and purchase transaction"
-          : "Successfully created unsigned token creation transaction",
+        message:
+          args.amountToBuyInSol > 0
+            ? "Successfully created unsigned token creation and purchase transaction"
+            : "Successfully created unsigned token creation transaction",
         unsigned_message: unsignedTransaction,
         transactionType: "pumpfun_create_and_buy_token",
         tokenMint: mint.publicKey.toBase58(),
@@ -299,7 +303,7 @@ export class PumpfunActionProvider extends ActionProvider<SvmWalletProvider> {
 
   /**
    * Creates token metadata on IPFS via Pump.fun API.
-   * 
+   *
    * @param metadata - Token metadata to upload
    * @returns The uploaded metadata response with URI
    */
@@ -354,4 +358,4 @@ export class PumpfunActionProvider extends ActionProvider<SvmWalletProvider> {
   };
 }
 
-export const pumpfunActionProvider = () => new PumpfunActionProvider(); 
+export const pumpfunActionProvider = () => new PumpfunActionProvider();

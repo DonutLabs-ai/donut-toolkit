@@ -22,12 +22,12 @@ export class SolanaNftActionProvider extends ActionProvider<SvmWalletProvider> {
 
   /**
    * Creates a new SolanaNftActionProvider instance.
-   * 
+   *
    * @param config - Configuration options for the provider
    */
   constructor(config: SolanaNftActionProviderConfig = {}) {
     super("solana_nft", []);
-    
+
     this.rpcUrl = config.rpcUrl;
     this.timeout = config.timeout || 30000;
   }
@@ -64,8 +64,9 @@ export class SolanaNftActionProvider extends ActionProvider<SvmWalletProvider> {
       const ownerPubkey = new PublicKey(args.address);
 
       // Get token account information
-      const { getAssociatedTokenAddress, getAccount, TokenAccountNotFoundError } =
-        await import("@solana/spl-token");
+      const { getAssociatedTokenAddress, getAccount, TokenAccountNotFoundError } = await import(
+        "@solana/spl-token"
+      );
 
       let isOwned = false;
 
@@ -87,15 +88,13 @@ export class SolanaNftActionProvider extends ActionProvider<SvmWalletProvider> {
 
       try {
         // Try to get metadata using token metadata program if available
-        const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
-        
+        const TOKEN_METADATA_PROGRAM_ID = new PublicKey(
+          "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+        );
+
         const [metadataPDA] = PublicKey.findProgramAddressSync(
-          [
-            Buffer.from("metadata"),
-            TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-            mintPubkey.toBuffer(),
-          ],
-          TOKEN_METADATA_PROGRAM_ID
+          [Buffer.from("metadata"), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mintPubkey.toBuffer()],
+          TOKEN_METADATA_PROGRAM_ID,
         );
 
         try {
@@ -103,47 +102,56 @@ export class SolanaNftActionProvider extends ActionProvider<SvmWalletProvider> {
           if (metadataAccount) {
             // Basic metadata parsing - simplified without full Metaplex dependency
             const metadataBuffer = metadataAccount.data;
-            
+
             // Extract basic information from metadata account
             // This is a simplified parser - in production, use @metaplex-foundation/mpl-token-metadata
             let offset = 1 + 32 + 32; // Skip key + update authority + mint
-            
+
             // Read name (first 4 bytes are length, then string)
-            let nameLength = metadataBuffer.readUInt32LE(offset);
+            const nameLength = metadataBuffer.readUInt32LE(offset);
             offset += 4;
-            const name = metadataBuffer.slice(offset, offset + nameLength).toString('utf8').replace(/\0/g, '');
+            const name = metadataBuffer
+              .slice(offset, offset + nameLength)
+              .toString("utf8")
+              .replace(/\0/g, "");
             offset += 32; // Fixed size field
-            
+
             // Read symbol
-            let symbolLength = metadataBuffer.readUInt32LE(offset);
+            const symbolLength = metadataBuffer.readUInt32LE(offset);
             offset += 4;
-            const symbol = metadataBuffer.slice(offset, offset + symbolLength).toString('utf8').replace(/\0/g, '');
+            const symbol = metadataBuffer
+              .slice(offset, offset + symbolLength)
+              .toString("utf8")
+              .replace(/\0/g, "");
             offset += 10; // Fixed size field
-            
+
             // Read URI
-            let uriLength = metadataBuffer.readUInt32LE(offset);
+            const uriLength = metadataBuffer.readUInt32LE(offset);
             offset += 4;
-            const uri = metadataBuffer.slice(offset, offset + uriLength).toString('utf8').replace(/\0/g, '');
-            
+            const uri = metadataBuffer
+              .slice(offset, offset + uriLength)
+              .toString("utf8")
+              .replace(/\0/g, "");
+
             metadata = {
               data: {
                 name,
                 symbol,
-                uri
-              }
+                uri,
+              },
             };
 
             // Fetch off-chain metadata if URI is available
-            if (uri && uri.startsWith('http')) {
+            if (uri && uri.startsWith("http")) {
               try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-                
-                const response = await fetch(uri, { 
-                  signal: controller.signal 
+
+                const response = await fetch(uri, {
+                  signal: controller.signal,
                 });
                 clearTimeout(timeoutId);
-                
+
                 if (response.ok) {
                   metadataContent = await response.json();
                 }
@@ -168,11 +176,13 @@ export class SolanaNftActionProvider extends ActionProvider<SvmWalletProvider> {
         image: metadataContent?.image || metadataContent?.image_uri || null,
         externalUrl: metadataContent?.external_url || null,
         attributes: metadataContent?.attributes || [],
-        collection: metadataContent?.collection ? {
-          name: metadataContent?.collection?.name || "Unknown",
-          family: metadataContent?.collection?.family || "Unknown",
-          verified: false,
-        } : undefined,
+        collection: metadataContent?.collection
+          ? {
+              name: metadataContent?.collection?.name || "Unknown",
+              family: metadataContent?.collection?.family || "Unknown",
+              verified: false,
+            }
+          : undefined,
         creators: [],
         sellerFeeBasisPoints: metadataContent?.seller_fee_basis_points || 0,
         primarySaleHappened: false,
@@ -185,7 +195,6 @@ export class SolanaNftActionProvider extends ActionProvider<SvmWalletProvider> {
         nft: nftInfo,
         isOwnedByAddress: isOwned,
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
@@ -239,12 +248,7 @@ export class SolanaNftActionProvider extends ActionProvider<SvmWalletProvider> {
 
       // Add create ATA instruction for recipient (will be ignored if already exists)
       instructions.push(
-        createAssociatedTokenAccountInstruction(
-          fromPubkey,
-          destinationAta,
-          toPubkey,
-          mintPubkey
-        )
+        createAssociatedTokenAccountInstruction(fromPubkey, destinationAta, toPubkey, mintPubkey),
       );
 
       // Add transfer instruction (NFTs have amount = 1, decimals = 0)
@@ -254,7 +258,7 @@ export class SolanaNftActionProvider extends ActionProvider<SvmWalletProvider> {
           destinationAta,
           fromPubkey,
           1, // NFTs always have amount = 1
-        )
+        ),
       );
 
       if (instructions.length === 0) {
@@ -267,7 +271,7 @@ export class SolanaNftActionProvider extends ActionProvider<SvmWalletProvider> {
           payerKey: fromPubkey,
           instructions: instructions,
           recentBlockhash: "11111111111111111111111111111111", // Placeholder blockhash
-        })
+        }),
       );
 
       // Serialize to base64
@@ -285,7 +289,6 @@ export class SolanaNftActionProvider extends ActionProvider<SvmWalletProvider> {
       };
 
       return JSON.stringify(result);
-
     } catch (error) {
       const result: NftTransferResult = {
         success: false,
@@ -315,5 +318,5 @@ export class SolanaNftActionProvider extends ActionProvider<SvmWalletProvider> {
  * @param config - Configuration options for the provider
  * @returns A new SolanaNftActionProvider instance
  */
-export const solanaNftActionProvider = (config?: SolanaNftActionProviderConfig) => 
-  new SolanaNftActionProvider(config); 
+export const solanaNftActionProvider = (config?: SolanaNftActionProviderConfig) =>
+  new SolanaNftActionProvider(config);

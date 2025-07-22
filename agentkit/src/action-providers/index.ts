@@ -14,7 +14,6 @@ export * from "./wallet";
 export * from "./x402";
 
 // Data Query Providers (Multi-chain compatible)
-export * from "./alchemy";
 export * from "./defillama";
 export * from "./dexscreener";
 export * from "./messari";

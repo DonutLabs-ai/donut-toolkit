@@ -94,14 +94,12 @@ If you only need read-only actions (like price queries, DeFi data, etc.), you ca
 ```typescript
 import { getMcpToolsFromProviders } from "@coinbase/agentkit-model-context-protocol";
 import { 
-  alchemyTokenPricesActionProvider,
   defillamaActionProvider,
   dexscreenerActionProvider 
 } from "@coinbase/agentkit";
 
 // Use only read-only action providers (no wallet required)
 const { tools, toolHandler } = await getMcpToolsFromProviders([
-  alchemyTokenPricesActionProvider(),
   defillamaActionProvider(),
   dexscreenerActionProvider(),
 ]);
@@ -185,7 +183,7 @@ The MCP extension supports all AgentKit action providers:
 
 - **Wallet Operations**: Transfer tokens, check balances
 - **DeFi Protocols**: Jupiter, Meteora, SPL tokens
-- **Price Data**: Alchemy, DexScreener, DefiLlama
+- **Price Data**: DexScreener, DefiLlama
 - **NFTs**: Magic Eden, Solana NFTs
 - **Analytics**: GoPlus security analysis
 - **And many more...**

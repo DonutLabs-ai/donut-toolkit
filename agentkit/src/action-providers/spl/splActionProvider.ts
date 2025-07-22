@@ -119,7 +119,7 @@ export class SplActionProvider extends ActionProvider<SvmWalletProvider> {
       if (!this.validateSolanaAddress(args.mintAddress)) {
         return JSON.stringify({
           success: false,
-          error: "Invalid mint address", 
+          error: "Invalid mint address",
           message: `Mint address ${args.mintAddress} is not a valid Solana address`,
         });
       }
@@ -136,7 +136,7 @@ export class SplActionProvider extends ActionProvider<SvmWalletProvider> {
 
       // Calculate the raw amount using user-provided decimals
       const adjustedAmount = args.amount * Math.pow(10, args.decimals);
-      
+
       // Calculate ATA addresses (no chain queries needed)
       const sourceAta = await getAssociatedTokenAddress(mintPubkey, fromPubkey);
       const destinationAta = await getAssociatedTokenAddress(mintPubkey, toPubkey);
@@ -145,7 +145,7 @@ export class SplActionProvider extends ActionProvider<SvmWalletProvider> {
 
       // Always add create ATA instruction (chain will handle if it already exists)
       instructions.push(
-        createAssociatedTokenAccountInstruction(fromPubkey, destinationAta, toPubkey, mintPubkey)
+        createAssociatedTokenAccountInstruction(fromPubkey, destinationAta, toPubkey, mintPubkey),
       );
 
       // Add transfer instruction
@@ -157,7 +157,7 @@ export class SplActionProvider extends ActionProvider<SvmWalletProvider> {
           fromPubkey,
           adjustedAmount,
           args.decimals,
-        )
+        ),
       );
 
       // Build unsigned transaction with placeholder blockhash
@@ -166,7 +166,7 @@ export class SplActionProvider extends ActionProvider<SvmWalletProvider> {
           payerKey: fromPubkey,
           instructions: instructions,
           recentBlockhash: "11111111111111111111111111111111", // Placeholder blockhash
-        })
+        }),
       );
 
       // Serialize to base64
@@ -185,7 +185,6 @@ export class SplActionProvider extends ActionProvider<SvmWalletProvider> {
         requiresBlockhashUpdate: true,
         note: "Update the blockhash before signing this transaction",
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
@@ -208,7 +207,7 @@ export class SplActionProvider extends ActionProvider<SvmWalletProvider> {
 
   /**
    * Validates if a string is a valid Solana address.
-   * 
+   *
    * @param address - The address string to validate
    * @returns True if the address is valid, false otherwise
    */

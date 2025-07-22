@@ -18,7 +18,7 @@ async function testMagicEdenIntegration() {
     networkId: "solana-mainnet",
     chainId: undefined,
   };
-  
+
   const isSupported = magicEdenProvider.supportsNetwork(solanaMainnet as any);
   console.log(`Network support: ${isSupported ? "✅ Supported" : "❌ Not supported"}\n`);
 
@@ -27,7 +27,9 @@ async function testMagicEdenIntegration() {
   const actions = magicEdenProvider.getActions({} as any);
   console.log(`Available actions: ${actions.length}`);
   actions.forEach((action, index) => {
-    console.log(`  ${index + 1}. ${action.name}: ${action.description.split('\n')[1]?.trim() || 'No description'}`);
+    console.log(
+      `  ${index + 1}. ${action.name}: ${action.description.split("\n")[1]?.trim() || "No description"}`,
+    );
   });
 
   console.log("\n🎉 Magic Eden integration test completed!");

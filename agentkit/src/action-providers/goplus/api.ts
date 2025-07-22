@@ -1,13 +1,5 @@
-import { 
-  GOPLUS_API_BASE_URL, 
-  ENDPOINTS, 
-  REQUEST_CONFIG, 
-  ERROR_MESSAGES 
-} from "./constants";
-import { 
-  SolanaTokenSecurityResponse,
-  GoplusActionProviderConfig 
-} from "./types";
+import { GOPLUS_API_BASE_URL, ENDPOINTS, REQUEST_CONFIG, ERROR_MESSAGES } from "./constants";
+import { SolanaTokenSecurityResponse, GoplusActionProviderConfig } from "./types";
 
 /**
  * GoPlus API client for security analysis
@@ -18,6 +10,10 @@ export class GoplusAPI {
   private readonly maxRetries: number;
   private readonly enableLogging: boolean;
 
+  /**
+   *
+   * @param config
+   */
   constructor(config: GoplusActionProviderConfig = {}) {
     this.baseURL = config.apiBaseUrl || GOPLUS_API_BASE_URL;
     this.timeout = config.timeout || REQUEST_CONFIG.TIMEOUT;
@@ -27,34 +23,47 @@ export class GoplusAPI {
 
   /**
    * Get security analysis for Solana tokens
+   *
+   * @param contractAddresses
    */
-  async solanaTokenSecurity(contractAddresses: string | string[]): Promise<SolanaTokenSecurityResponse> {
-    const addresses = Array.isArray(contractAddresses) ? contractAddresses.join(',') : contractAddresses;
+  async solanaTokenSecurity(
+    contractAddresses: string | string[],
+  ): Promise<SolanaTokenSecurityResponse> {
+    const addresses = Array.isArray(contractAddresses)
+      ? contractAddresses.join(",")
+      : contractAddresses;
     const url = `${this.baseURL}${ENDPOINTS.SOLANA_TOKEN_SECURITY}?contract_addresses=${encodeURIComponent(addresses)}`;
-    
+
     return this.makeRequest<SolanaTokenSecurityResponse>(url);
   }
 
   /**
    * Check if an address is malicious
+   *
+   * @param address
    */
   async checkMaliciousAddress(address: string): Promise<any> {
     const url = `${this.baseURL}${ENDPOINTS.MALICIOUS_ADDRESS}?address=${encodeURIComponent(address)}`;
-    
+
     return this.makeRequest(url);
   }
 
   /**
    * Get address security information
+   *
+   * @param address
    */
   async getAddressSecurity(address: string): Promise<any> {
     const url = `${this.baseURL}${ENDPOINTS.ADDRESS_SECURITY}?address=${encodeURIComponent(address)}`;
-    
+
     return this.makeRequest(url);
   }
 
   /**
    * Make HTTP request with retry logic and error handling
+   *
+   * @param url
+   * @param retryCount
    */
   private async makeRequest<T>(url: string, retryCount = 0): Promise<T> {
     try {
@@ -66,10 +75,10 @@ export class GoplusAPI {
       const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Coinbase-AgentKit-GoPlus/1.0.0',
+          Accept: "application/json",
+          "User-Agent": "Coinbase-AgentKit-GoPlus/1.0.0",
         },
         signal: controller.signal,
       });
@@ -92,14 +101,13 @@ export class GoplusAPI {
       }
 
       return data;
-
     } catch (error: unknown) {
       if (this.enableLogging) {
         console.error(`[GoPlus API] Request failed:`, error);
       }
 
       // Handle timeout
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === "AbortError") {
         if (retryCount < this.maxRetries) {
           if (this.enableLogging) {
             console.log(`[GoPlus API] Retrying request (${retryCount + 1}/${this.maxRetries})`);
@@ -111,7 +119,11 @@ export class GoplusAPI {
       }
 
       // Handle network errors with retry
-      if (error instanceof Error && error.message.includes('fetch') && retryCount < this.maxRetries) {
+      if (
+        error instanceof Error &&
+        error.message.includes("fetch") &&
+        retryCount < this.maxRetries
+      ) {
         if (this.enableLogging) {
           console.log(`[GoPlus API] Retrying request (${retryCount + 1}/${this.maxRetries})`);
         }
@@ -132,6 +144,8 @@ export class GoplusAPI {
 
   /**
    * Delay utility for retry logic
+   *
+   * @param ms
    */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -142,12 +156,18 @@ export class GoplusAPI {
  * Custom error class for GoPlus API errors
  */
 class GoplusApiError extends Error {
+  /**
+   *
+   * @param code
+   * @param message
+   * @param details
+   */
   constructor(
     public readonly code: number,
     message: string,
-    public readonly details?: string
+    public readonly details?: string,
   ) {
     super(message);
-    this.name = 'GoplusApiError';
+    this.name = "GoplusApiError";
   }
 }

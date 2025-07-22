@@ -35,4 +35,4 @@ export const SearchDomainsSchema = z
     query: z.string().describe("Search query for domain names"),
     limit: z.number().optional().default(10).describe("Maximum number of results to return"),
   })
-  .describe("Search for available SNS domains"); 
+  .describe("Search for available SNS domains");

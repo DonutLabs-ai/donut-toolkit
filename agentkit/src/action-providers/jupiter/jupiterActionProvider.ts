@@ -42,7 +42,7 @@ export class JupiterActionProvider extends ActionProvider<SvmWalletProvider> {
   ): Promise<string> {
     try {
       const jupiterApi = createJupiterApiClient({
-        basePath: "https://quote-api.jup.ag"
+        basePath: "https://quote-api.jup.ag",
       });
       const userPublicKey = walletProvider.getPublicKey();
       const inputMint = new PublicKey(args.inputMint);
@@ -82,13 +82,12 @@ export class JupiterActionProvider extends ActionProvider<SvmWalletProvider> {
         throw new Error("Failed to generate swap transaction.");
       }
 
-
       const unsignedTransaction = swapResponse.swapTransaction;
-      
+
       return JSON.stringify({
         success: true,
         unsignedTransaction: unsignedTransaction,
-        transactionType: 'jupiter_swap',
+        transactionType: "jupiter_swap",
         inputMint: args.inputMint,
         outputMint: args.outputMint,
         amount: args.amount,
@@ -97,16 +96,15 @@ export class JupiterActionProvider extends ActionProvider<SvmWalletProvider> {
           inAmount: quoteResponse.inAmount,
           outAmount: quoteResponse.outAmount,
           priceImpact: quoteResponse.priceImpactPct,
-          routePlan: quoteResponse.routePlan  
+          routePlan: quoteResponse.routePlan,
         },
-        message: `Unsigned swap transaction created. Transaction data: ${unsignedTransaction.substring(0, 50)}...`
+        message: `Unsigned swap transaction created. Transaction data: ${unsignedTransaction.substring(0, 50)}...`,
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: `Error creating swap transaction: ${error}`,
-        message: `Failed to create unsigned swap transaction: ${error}`
+        message: `Failed to create unsigned swap transaction: ${error}`,
       });
     }
   }

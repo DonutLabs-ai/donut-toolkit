@@ -132,16 +132,28 @@ Important notes:
 
   /**
    * Builds an unsigned Solana transfer transaction.
+   *
+   * @param walletProvider
+   * @param toAddress
+   * @param value
+   * @param terminology
    */
   private async buildSolanaTransfer(
     walletProvider: WalletProvider,
     toAddress: string,
     value: string,
-    terminology: any
+    terminology: any,
   ): Promise<string> {
     // Import Solana dependencies dynamically
-    const { PublicKey, SystemProgram, ComputeBudgetProgram, VersionedTransaction, MessageV0, LAMPORTS_PER_SOL } = await import("@solana/web3.js");
-    
+    const {
+      PublicKey,
+      SystemProgram,
+      ComputeBudgetProgram,
+      VersionedTransaction,
+      MessageV0,
+      LAMPORTS_PER_SOL,
+    } = await import("@solana/web3.js");
+
     const fromPubkey = new PublicKey(walletProvider.getAddress());
     const toPubkey = new PublicKey(toAddress);
     const solAmount = parseFloat(value);
@@ -153,7 +165,7 @@ Important notes:
       throw new Error(
         `Insufficient balance. Have ${Number(balance) / LAMPORTS_PER_SOL} SOL, need ${
           solAmount + 0.000005
-        } SOL (including fees)`
+        } SOL (including fees)`,
       );
     }
 
@@ -197,26 +209,32 @@ Important notes:
 
   /**
    * Builds an unsigned EVM transfer transaction.
+   *
+   * @param walletProvider
+   * @param toAddress
+   * @param value
+   * @param terminology
    */
   private async buildEvmTransfer(
     walletProvider: WalletProvider,
     toAddress: string,
     value: string,
-    terminology: any
+    terminology: any,
   ): Promise<string> {
     // For EVM, we need to build a proper transaction object
     // This is a simplified implementation - real implementation would need proper gas estimation
-    
+
     const fromAddress = walletProvider.getAddress();
     const weiValue = BigInt(Math.floor(parseFloat(value) * 1e18)); // Convert ETH to Wei
 
     // Check balance (simplified)
     const balance = await walletProvider.getBalance();
-    if (balance < weiValue + BigInt(21000 * 20000000000)) { // rough gas estimate
+    if (balance < weiValue + BigInt(21000 * 20000000000)) {
+      // rough gas estimate
       throw new Error(
         `Insufficient balance. Have ${Number(balance) / 1e18} ETH, need ${
           parseFloat(value) + 0.0004
-        } ETH (including fees)`
+        } ETH (including fees)`,
       );
     }
 

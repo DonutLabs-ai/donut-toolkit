@@ -134,13 +134,6 @@
 - 📖 `fetch_price_feed` - 获取价格 feed ID
 - 📖 `fetch_price` - 根据 feed ID 获取价格
 
-### AlchemyTokenPricesActionProvider 🟡
-**网络支持**: 多链代币价格 API  
-**描述**: 通过 Alchemy API 获取代币价格
-
-#### Actions:
-- 📖 `token_prices_by_symbol` - 按符号获取代币价格
-- 📖 `token_prices_by_address` - 按地址获取代币价格
 
 ### DefiLlamaActionProvider 🟡
 **网络支持**: 所有网络（数据查询）  
@@ -266,7 +259,6 @@
 
 ### 🔑 API 密钥要求
 以下 Action Providers 需要 API 密钥：
-- `AlchemyTokenPricesActionProvider`: ALCHEMY_API_KEY
 - `MessariActionProvider`: MESSARI_API_KEY  
 - `MagicEdenActionProvider`: MAGIC_EDEN_API_KEY (可选)
 - `OnrampActionProvider`: PROJECT_ID

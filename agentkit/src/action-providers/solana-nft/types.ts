@@ -73,4 +73,4 @@ export interface NftTransferResult {
   note?: string;
   /** Error message if operation failed */
   error?: string;
-} 
+}

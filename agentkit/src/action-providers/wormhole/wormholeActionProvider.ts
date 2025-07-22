@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { ActionProvider } from "../actionProvider";
 import { CreateAction } from "../actionDecorator";
-import { 
-  TransferTokenSchema, 
-  GetTransferStatusSchema, 
-  GetSupportedChainsSchema, 
-  GetTokenInfoSchema, 
-  EstimateFeesSchema 
+import {
+  TransferTokenSchema,
+  GetTransferStatusSchema,
+  GetSupportedChainsSchema,
+  GetTokenInfoSchema,
+  EstimateFeesSchema,
 } from "./schemas";
 import { WormholeAPI } from "./api";
 import { Network } from "../../network";
@@ -18,6 +18,9 @@ import { Network } from "../../network";
 export class WormholeActionProvider extends ActionProvider {
   private readonly api: WormholeAPI;
 
+  /**
+   *
+   */
   constructor() {
     super("wormhole", []);
     this.api = new WormholeAPI();
@@ -25,10 +28,13 @@ export class WormholeActionProvider extends ActionProvider {
 
   /**
    * Transfer tokens across chains using Wormhole bridge.
+   *
+   * @param args
    */
   @CreateAction({
     name: "transfer_token",
-    description: "Transfer tokens from one blockchain to another using Wormhole bridge. Supports major chains like Ethereum, Solana, Polygon, etc.",
+    description:
+      "Transfer tokens from one blockchain to another using Wormhole bridge. Supports major chains like Ethereum, Solana, Polygon, etc.",
     schema: TransferTokenSchema,
   })
   async transferToken(args: z.infer<typeof TransferTokenSchema>): Promise<string> {
@@ -40,7 +46,7 @@ export class WormholeActionProvider extends ActionProvider {
         return JSON.stringify({
           success: false,
           error: "Invalid transfer",
-          message: "Source and destination chains cannot be the same"
+          message: "Source and destination chains cannot be the same",
         });
       }
 
@@ -48,7 +54,7 @@ export class WormholeActionProvider extends ActionProvider {
         return JSON.stringify({
           success: false,
           error: "Unsupported chain",
-          message: `Source chain '${fromChain}' is not supported by Wormhole`
+          message: `Source chain '${fromChain}' is not supported by Wormhole`,
         });
       }
 
@@ -56,7 +62,7 @@ export class WormholeActionProvider extends ActionProvider {
         return JSON.stringify({
           success: false,
           error: "Unsupported chain",
-          message: `Destination chain '${toChain}' is not supported by Wormhole`
+          message: `Destination chain '${toChain}' is not supported by Wormhole`,
         });
       }
 
@@ -65,7 +71,7 @@ export class WormholeActionProvider extends ActionProvider {
         return JSON.stringify({
           success: false,
           error: "Invalid amount",
-          message: "Transfer amount must be greater than 0"
+          message: "Transfer amount must be greater than 0",
         });
       }
 
@@ -75,7 +81,7 @@ export class WormholeActionProvider extends ActionProvider {
         toChain,
         tokenAddress,
         amount,
-        recipientAddress
+        recipientAddress,
       });
 
       return JSON.stringify({
@@ -92,22 +98,23 @@ export class WormholeActionProvider extends ActionProvider {
           next_steps: [
             "Wait for the transfer to be processed",
             "Use get_transfer_status to check progress",
-            "The transfer typically takes 5-15 minutes to complete"
-          ]
-        }
+            "The transfer typically takes 5-15 minutes to complete",
+          ],
+        },
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "Transfer Error",
-        message: error instanceof Error ? error.message : String(error)
+        message: error instanceof Error ? error.message : String(error),
       });
     }
   }
 
   /**
    * Get the status of a cross-chain transfer.
+   *
+   * @param args
    */
   @CreateAction({
     name: "get_transfer_status",
@@ -122,7 +129,7 @@ export class WormholeActionProvider extends ActionProvider {
         return JSON.stringify({
           success: false,
           error: "Unsupported chain",
-          message: `Chain '${fromChain}' is not supported by Wormhole`
+          message: `Chain '${fromChain}' is not supported by Wormhole`,
         });
       }
 
@@ -138,25 +145,27 @@ export class WormholeActionProvider extends ActionProvider {
           destinationTxHash: status.destinationTxHash,
           estimatedCompletion: status.estimatedCompletion,
           message: status.message,
-          statusDescription: {
-            pending: "Transfer is being processed on the bridge",
-            completed: "Transfer has been completed successfully",
-            failed: "Transfer has failed and needs to be retried"
-          }[status.status] || "Unknown status"
-        }
+          statusDescription:
+            {
+              pending: "Transfer is being processed on the bridge",
+              completed: "Transfer has been completed successfully",
+              failed: "Transfer has failed and needs to be retried",
+            }[status.status] || "Unknown status",
+        },
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "Status Check Error",
-        message: error instanceof Error ? error.message : String(error)
+        message: error instanceof Error ? error.message : String(error),
       });
     }
   }
 
   /**
    * Get list of chains supported by Wormhole.
+   *
+   * @param args
    */
   @CreateAction({
     name: "get_supported_chains",
@@ -180,27 +189,29 @@ export class WormholeActionProvider extends ActionProvider {
             { name: "avalanche", chainId: 6, description: "Avalanche C-Chain" },
             { name: "arbitrum", chainId: 23, description: "Arbitrum One" },
             { name: "optimism", chainId: 24, description: "Optimism" },
-            { name: "base", chainId: 30, description: "Base" }
+            { name: "base", chainId: 30, description: "Base" },
           ],
-          note: "Wormhole supports many blockchain networks for cross-chain transfers"
-        }
+          note: "Wormhole supports many blockchain networks for cross-chain transfers",
+        },
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "Chains Error",
-        message: error instanceof Error ? error.message : String(error)
+        message: error instanceof Error ? error.message : String(error),
       });
     }
   }
 
   /**
    * Get token information across different chains.
+   *
+   * @param args
    */
   @CreateAction({
     name: "get_token_info",
-    description: "Get information about a token and its wrapped versions on other chains supported by Wormhole.",
+    description:
+      "Get information about a token and its wrapped versions on other chains supported by Wormhole.",
     schema: GetTokenInfoSchema,
   })
   async getTokenInfo(args: z.infer<typeof GetTokenInfoSchema>): Promise<string> {
@@ -211,7 +222,7 @@ export class WormholeActionProvider extends ActionProvider {
         return JSON.stringify({
           success: false,
           error: "Unsupported chain",
-          message: `Chain '${chain}' is not supported by Wormhole`
+          message: `Chain '${chain}' is not supported by Wormhole`,
         });
       }
 
@@ -228,21 +239,22 @@ export class WormholeActionProvider extends ActionProvider {
           symbol: tokenInfo.symbol,
           name: tokenInfo.name,
           transferSupported: true,
-          note: tokenInfo.note
-        }
+          note: tokenInfo.note,
+        },
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "Token Info Error",
-        message: error instanceof Error ? error.message : String(error)
+        message: error instanceof Error ? error.message : String(error),
       });
     }
   }
 
   /**
    * Estimate fees for a cross-chain transfer.
+   *
+   * @param args
    */
   @CreateAction({
     name: "estimate_fees",
@@ -257,7 +269,7 @@ export class WormholeActionProvider extends ActionProvider {
         return JSON.stringify({
           success: false,
           error: "Invalid request",
-          message: "Source and destination chains cannot be the same"
+          message: "Source and destination chains cannot be the same",
         });
       }
 
@@ -265,7 +277,7 @@ export class WormholeActionProvider extends ActionProvider {
         return JSON.stringify({
           success: false,
           error: "Unsupported chain",
-          message: `Source chain '${fromChain}' is not supported by Wormhole`
+          message: `Source chain '${fromChain}' is not supported by Wormhole`,
         });
       }
 
@@ -273,7 +285,7 @@ export class WormholeActionProvider extends ActionProvider {
         return JSON.stringify({
           success: false,
           error: "Unsupported chain",
-          message: `Destination chain '${toChain}' is not supported by Wormhole`
+          message: `Destination chain '${toChain}' is not supported by Wormhole`,
         });
       }
 
@@ -281,7 +293,7 @@ export class WormholeActionProvider extends ActionProvider {
         fromChain,
         toChain,
         tokenAddress,
-        amount
+        amount,
       });
 
       return JSON.stringify({
@@ -296,17 +308,16 @@ export class WormholeActionProvider extends ActionProvider {
           breakdown: {
             "Bridge Fee": "Fee paid to Wormhole bridge protocol",
             "Relay Fee": "Fee for automatic completion on destination chain",
-            "Gas Fees": "Network transaction fees on both chains"
+            "Gas Fees": "Network transaction fees on both chains",
           },
-          note: feeEstimate.note
-        }
+          note: feeEstimate.note,
+        },
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "Fee Estimation Error",
-        message: error instanceof Error ? error.message : String(error)
+        message: error instanceof Error ? error.message : String(error),
       });
     }
   }
@@ -314,10 +325,12 @@ export class WormholeActionProvider extends ActionProvider {
   /**
    * Check if the action provider supports the given network.
    * Wormhole supports multiple networks, so this checks against supported chains.
+   *
+   * @param network
    */
   supportsNetwork(network: Network): boolean {
     // Extract chain name from networkId or use protocol family
-    const chainName = network.networkId?.split('-')[0] || network.protocolFamily;
+    const chainName = network.networkId?.split("-")[0] || network.protocolFamily;
     return this.api.isChainSupported(chainName);
   }
-} 
+}

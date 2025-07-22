@@ -50,4 +50,4 @@ export const EstimateFeesSchema = z
     tokenAddress: z.string().describe("Token contract address"),
     amount: z.string().describe("Amount to transfer"),
   })
-  .describe("Estimate fees for a cross-chain transfer via Wormhole"); 
+  .describe("Estimate fees for a cross-chain transfer via Wormhole");

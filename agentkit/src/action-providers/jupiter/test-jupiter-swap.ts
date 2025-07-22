@@ -12,11 +12,11 @@ async function testJupiterSwap() {
 
     // 创建 Jupiter API 客户端 - 使用免费的 quote-api.jup.ag 端点
     const jupiterApi = createJupiterApiClient({
-      basePath: "https://quote-api.jup.ag"
+      basePath: "https://quote-api.jup.ag",
     });
-    
+
     console.log("🔧 使用免费 API 端点: quote-api.jup.ag");
-    
+
     // 如果需要付费版本，可以使用：
     // const jupiterApi = createJupiterApiClient({
     //   basePath: "https://api.jup.ag",
@@ -49,7 +49,7 @@ async function testJupiterSwap() {
       });
     } catch (error: unknown) {
       console.error("❌ Jupiter API 调用失败:", error);
-      if (error && typeof error === 'object' && 'response' in error) {
+      if (error && typeof error === "object" && "response" in error) {
         const errorWithResponse = error as { response: { text: () => Promise<string> } };
         const text = await errorWithResponse.response.text();
         console.error("Jupiter API response:", text);
@@ -95,7 +95,9 @@ async function testJupiterSwap() {
     console.log("\n📊 BASE64 数据分析:");
     console.log(`  长度: ${unsignedTransaction.length} 字符`);
     console.log(`  前50个字符: ${unsignedTransaction.substring(0, 50)}...`);
-    console.log(`  后50个字符: ...${unsignedTransaction.substring(unsignedTransaction.length - 50)}`);
+    console.log(
+      `  后50个字符: ...${unsignedTransaction.substring(unsignedTransaction.length - 50)}`,
+    );
 
     // 4. 验证 base64 格式
     try {
@@ -119,17 +121,18 @@ async function testJupiterSwap() {
     console.log("- 使用 VersionedTransaction.deserialize(Buffer.from(base64, 'base64')) 反序列化");
     console.log("- 签名后可以发送到 Solana 网络");
     console.log("- 使用免费 API: lite-api.jup.ag (无需 API 密钥)");
-
   } catch (error) {
     console.error("❌ 测试失败:", error);
   }
 }
 
 // 运行测试
-testJupiterSwap().then(() => {
-  console.log("\n🏁 测试完成");
-  process.exit(0);
-}).catch((error) => {
-  console.error("💥 测试异常:", error);
-  process.exit(1);
-}); 
+testJupiterSwap()
+  .then(() => {
+    console.log("\n🏁 测试完成");
+    process.exit(0);
+  })
+  .catch(error => {
+    console.error("💥 测试异常:", error);
+    process.exit(1);
+  });

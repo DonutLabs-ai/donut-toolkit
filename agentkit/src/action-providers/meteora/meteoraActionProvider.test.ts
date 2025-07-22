@@ -30,7 +30,7 @@ describe("MeteoraDLMMActionProvider - Real API Tests", () => {
 
   beforeEach(() => {
     provider = new MeteoraDLMMActionProvider();
-    
+
     // Mock wallet provider with real public key
     mockWalletProvider = {
       getConnection: jest.fn().mockReturnValue(TEST_CONNECTION),
@@ -261,11 +261,7 @@ describe("MeteoraDLMMActionProvider - Real API Tests", () => {
         limit: 10,
       });
 
-      expect((provider as any).getAvailablePoolsList).toHaveBeenCalledWith(
-        "token1",
-        "token2",
-        10
-      );
+      expect((provider as any).getAvailablePoolsList).toHaveBeenCalledWith("token1", "token2", 10);
 
       const parsedResult = JSON.parse(result);
       expect(parsedResult.filters).toEqual({
@@ -363,14 +359,14 @@ describe("MeteoraDLMMActionProvider - Real API Tests", () => {
       it("should fetch real available pools from Meteora API", async () => {
         console.log("\n=== Testing getAvailablePools with real API ===");
         console.log(`Using public key: ${TEST_PUBLIC_KEY}`);
-        
+
         const result = await provider.getAvailablePools(mockWalletProvider, {
-          limit: 5
+          limit: 5,
         });
-        
+
         console.log("\n📊 Available Pools Result:");
         console.log(JSON.stringify(JSON.parse(result), null, 2));
-        
+
         const parsedResult = JSON.parse(result);
         expect(parsedResult.success).toBe(true);
         expect(Array.isArray(parsedResult.pools)).toBe(true);
@@ -379,16 +375,16 @@ describe("MeteoraDLMMActionProvider - Real API Tests", () => {
 
       it("should filter pools by token pair", async () => {
         console.log("\n=== Testing getAvailablePools with SOL/USDC filter ===");
-        
+
         const result = await provider.getAvailablePools(mockWalletProvider, {
           tokenX: REAL_TOKENS.SOL,
           tokenY: REAL_TOKENS.USDC,
-          limit: 3
+          limit: 3,
         });
-        
+
         console.log("\n📊 Filtered Pools Result:");
         console.log(JSON.stringify(JSON.parse(result), null, 2));
-        
+
         const parsedResult = JSON.parse(result);
         expect(parsedResult.success).toBe(true);
         expect(parsedResult.filters.tokenX).toBe(REAL_TOKENS.SOL);
@@ -400,14 +396,14 @@ describe("MeteoraDLMMActionProvider - Real API Tests", () => {
       it("should fetch real pool information", async () => {
         console.log("\n=== Testing getPoolInfo with real pool address ===");
         console.log(`Pool address: ${TEST_POOL_ADDRESSES.SOL_USDC}`);
-        
+
         const result = await provider.getPoolInfo(mockWalletProvider, {
-          poolAddress: TEST_POOL_ADDRESSES.SOL_USDC
+          poolAddress: TEST_POOL_ADDRESSES.SOL_USDC,
         });
-        
+
         console.log("\n📊 Pool Info Result:");
         console.log(JSON.stringify(JSON.parse(result), null, 2));
-        
+
         const parsedResult = JSON.parse(result);
         // Note: This may fail if the pool doesn't exist or API is down
         // We'll log the result regardless
@@ -419,19 +415,19 @@ describe("MeteoraDLMMActionProvider - Real API Tests", () => {
       it("should fetch real user positions", async () => {
         console.log("\n=== Testing listUserPositions with real user address ===");
         console.log(`User address: ${TEST_PUBLIC_KEY}`);
-        
+
         const result = await provider.listUserPositions(mockWalletProvider, {
-          userAddress: TEST_PUBLIC_KEY
+          userAddress: TEST_PUBLIC_KEY,
         });
-        
+
         console.log("\n📊 User Positions Result:");
         console.log(JSON.stringify(JSON.parse(result), null, 2));
-        
+
         const parsedResult = JSON.parse(result);
         expect(parsedResult.success).toBe(true);
         expect(parsedResult.userAddress).toBe(TEST_PUBLIC_KEY);
         expect(Array.isArray(parsedResult.positions)).toBe(true);
-        expect(typeof parsedResult.count).toBe('number');
+        expect(typeof parsedResult.count).toBe("number");
       });
     });
 
@@ -440,29 +436,29 @@ describe("MeteoraDLMMActionProvider - Real API Tests", () => {
         console.log("\n=== Testing createPosition with real API ===");
         console.log(`User public key: ${TEST_PUBLIC_KEY}`);
         console.log(`Pool address: ${TEST_POOL_ADDRESSES.SOL_USDC}`);
-        
+
         const result = await provider.createPosition(mockWalletProvider, {
           poolAddress: TEST_POOL_ADDRESSES.SOL_USDC,
-          tokenXAmount: 0.1,  // 0.1 SOL
-          tokenYAmount: 10,   // 10 USDC
+          tokenXAmount: 0.1, // 0.1 SOL
+          tokenYAmount: 10, // 10 USDC
           lowerBinId: 100,
           upperBinId: 200,
-          slippageBps: 100    // 1% slippage
+          slippageBps: 100, // 1% slippage
         });
-        
+
         console.log("\n📊 Create Position Result:");
         const parsedResult = JSON.parse(result);
         console.log(JSON.stringify(parsedResult, null, 2));
-        
+
         if (parsedResult.success && parsedResult.unsignedTransaction) {
           console.log("\n🎯 UNSIGNED TRANSACTION BASE64:");
           console.log(parsedResult.unsignedTransaction);
           console.log("\n📏 Transaction length:", parsedResult.unsignedTransaction.length);
-          
+
           // Verify it's a valid base64 string
-          expect(typeof parsedResult.unsignedTransaction).toBe('string');
+          expect(typeof parsedResult.unsignedTransaction).toBe("string");
           expect(parsedResult.unsignedTransaction.length).toBeGreaterThan(0);
-          expect(parsedResult.transactionType).toBe('meteora_create_position');
+          expect(parsedResult.transactionType).toBe("meteora_create_position");
         } else {
           console.log("\n❌ Failed to create unsigned transaction:");
           console.log("Error:", parsedResult.error);
@@ -472,39 +468,45 @@ describe("MeteoraDLMMActionProvider - Real API Tests", () => {
 
       it("should handle multiple token pairs", async () => {
         console.log("\n=== Testing createPosition with different token pairs ===");
-        
+
         const testCases = [
           {
             name: "SOL/USDC",
             poolAddress: TEST_POOL_ADDRESSES.SOL_USDC,
             tokenXAmount: 0.05,
-            tokenYAmount: 5
+            tokenYAmount: 5,
           },
           {
             name: "SOL/RAY",
             poolAddress: TEST_POOL_ADDRESSES.SOL_RAY,
             tokenXAmount: 0.1,
-            tokenYAmount: 1
-          }
+            tokenYAmount: 1,
+          },
         ];
-        
+
         for (const testCase of testCases) {
           console.log(`\n--- Testing ${testCase.name} ---`);
-          
+
           const result = await provider.createPosition(mockWalletProvider, {
             poolAddress: testCase.poolAddress,
             tokenXAmount: testCase.tokenXAmount,
             tokenYAmount: testCase.tokenYAmount,
             lowerBinId: 50,
             upperBinId: 150,
-            slippageBps: 50
+            slippageBps: 50,
           });
-          
+
           const parsedResult = JSON.parse(result);
-          console.log(`${testCase.name} Result:`, parsedResult.success ? "✅ SUCCESS" : "❌ FAILED");
-          
+          console.log(
+            `${testCase.name} Result:`,
+            parsedResult.success ? "✅ SUCCESS" : "❌ FAILED",
+          );
+
           if (parsedResult.success && parsedResult.unsignedTransaction) {
-            console.log(`${testCase.name} - Unsigned Transaction Length:`, parsedResult.unsignedTransaction.length);
+            console.log(
+              `${testCase.name} - Unsigned Transaction Length:`,
+              parsedResult.unsignedTransaction.length,
+            );
             console.log(`${testCase.name} - Transaction Type:`, parsedResult.transactionType);
           }
         }
@@ -515,29 +517,29 @@ describe("MeteoraDLMMActionProvider - Real API Tests", () => {
       it("should create unsigned transaction for position closing", async () => {
         console.log("\n=== Testing closePosition with real API ===");
         console.log(`User public key: ${TEST_PUBLIC_KEY}`);
-        
+
         // Use a mock position address for testing
         const mockPositionAddress = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM";
-        
+
         const result = await provider.closePosition(mockWalletProvider, {
           positionAddress: mockPositionAddress,
-          basisPointsToClose: 10000,  // 100%
-          shouldClaimAndClose: true
+          basisPointsToClose: 10000, // 100%
+          shouldClaimAndClose: true,
         });
-        
+
         console.log("\n📊 Close Position Result:");
         const parsedResult = JSON.parse(result);
         console.log(JSON.stringify(parsedResult, null, 2));
-        
+
         if (parsedResult.success && parsedResult.unsignedTransaction) {
           console.log("\n🎯 UNSIGNED TRANSACTION BASE64:");
           console.log(parsedResult.unsignedTransaction);
           console.log("\n📏 Transaction length:", parsedResult.unsignedTransaction.length);
-          
+
           // Verify it's a valid base64 string
-          expect(typeof parsedResult.unsignedTransaction).toBe('string');
+          expect(typeof parsedResult.unsignedTransaction).toBe("string");
           expect(parsedResult.unsignedTransaction.length).toBeGreaterThan(0);
-          expect(parsedResult.transactionType).toBe('meteora_close_position');
+          expect(parsedResult.transactionType).toBe("meteora_close_position");
         } else {
           console.log("\n❌ Failed to create unsigned transaction:");
           console.log("Error:", parsedResult.error);
@@ -547,19 +549,19 @@ describe("MeteoraDLMMActionProvider - Real API Tests", () => {
 
       it("should handle partial position closing", async () => {
         console.log("\n=== Testing closePosition with partial close ===");
-        
+
         const mockPositionAddress = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM";
-        
+
         const result = await provider.closePosition(mockWalletProvider, {
           positionAddress: mockPositionAddress,
-          basisPointsToClose: 5000,   // 50%
-          shouldClaimAndClose: false
+          basisPointsToClose: 5000, // 50%
+          shouldClaimAndClose: false,
         });
-        
+
         console.log("\n📊 Partial Close Position Result:");
         const parsedResult = JSON.parse(result);
         console.log(JSON.stringify(parsedResult, null, 2));
-        
+
         if (parsedResult.success) {
           expect(parsedResult.percentageClosed).toBe(50);
           expect(parsedResult.claimedFees).toBe(false);
@@ -570,37 +572,37 @@ describe("MeteoraDLMMActionProvider - Real API Tests", () => {
     describe("API Error Handling", () => {
       it("should handle invalid pool addresses gracefully", async () => {
         console.log("\n=== Testing error handling with invalid pool ===");
-        
+
         const result = await provider.getPoolInfo(mockWalletProvider, {
-          poolAddress: "invalid-pool-address"
+          poolAddress: "invalid-pool-address",
         });
-        
+
         console.log("\n📊 Invalid Pool Result:");
         console.log(JSON.stringify(JSON.parse(result), null, 2));
-        
+
         const parsedResult = JSON.parse(result);
         // Should handle gracefully regardless of success/failure
-        expect(typeof parsedResult.success).toBe('boolean');
+        expect(typeof parsedResult.success).toBe("boolean");
       });
 
       it("should handle network errors gracefully", async () => {
         console.log("\n=== Testing network error handling ===");
-        
+
         // Temporarily mock axios to simulate network error
         const originalAxios = axios.get;
         (axios as any).get = jest.fn().mockRejectedValue(new Error("Network error"));
-        
+
         const result = await provider.getPoolInfo(mockWalletProvider, {
-          poolAddress: TEST_POOL_ADDRESSES.SOL_USDC
+          poolAddress: TEST_POOL_ADDRESSES.SOL_USDC,
         });
-        
+
         const parsedResult = JSON.parse(result);
         console.log("\n📊 Network Error Result:");
         console.log(JSON.stringify(parsedResult, null, 2));
-        
+
         // Restore original axios
         (axios as any).get = originalAxios;
-        
+
         expect(parsedResult.success).toBe(false);
       });
     });

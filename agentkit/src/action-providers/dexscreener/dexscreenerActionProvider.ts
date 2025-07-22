@@ -14,27 +14,31 @@ export class DexScreenerActionProvider extends ActionProvider {
 
   // Chain alias mapping for better user experience
   private readonly chainAliases: Record<string, string> = {
-    "sol": "solana",
-    "eth": "ethereum", 
-    "bnb": "bsc",
-    "avax": "avalanche",
-    "matic": "polygon",
+    sol: "solana",
+    eth: "ethereum",
+    bnb: "bsc",
+    avax: "avalanche",
+    matic: "polygon",
   };
 
   // Predefined popular token addresses for common tokens
-  private readonly knownTokens: Record<string, Record<string, { chain: string; address: string }>> = {
-    "sol": {
-      "solana": { chain: "solana", address: "So11111111111111111111111111111111111111112" }
-    },
-    "eth": {
-      "ethereum": { chain: "ethereum", address: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" },
-      "base": { chain: "base", address: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" }
-    },
-    "bnb": {
-      "bsc": { chain: "bsc", address: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" }
-    }
-  };
+  private readonly knownTokens: Record<string, Record<string, { chain: string; address: string }>> =
+    {
+      sol: {
+        solana: { chain: "solana", address: "So11111111111111111111111111111111111111112" },
+      },
+      eth: {
+        ethereum: { chain: "ethereum", address: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" },
+        base: { chain: "base", address: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" },
+      },
+      bnb: {
+        bsc: { chain: "bsc", address: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" },
+      },
+    };
 
+  /**
+   *
+   */
   constructor() {
     super("dexscreener", []);
     this.api = new DexScreenerAPI();
@@ -42,10 +46,13 @@ export class DexScreenerActionProvider extends ActionProvider {
 
   /**
    * Search for token information by symbol.
+   *
+   * @param args
    */
   @CreateAction({
-    name: "search_token", 
-    description: "Search for token information by symbol from DexScreener. Returns token details, price, and trading pairs.",
+    name: "search_token",
+    description:
+      "Search for token information by symbol from DexScreener. Returns token details, price, and trading pairs.",
     schema: SearchTokenSchema,
   })
   async searchToken(args: z.infer<typeof SearchTokenSchema>): Promise<string> {
@@ -68,8 +75,8 @@ export class DexScreenerActionProvider extends ActionProvider {
               symbol: symbol.toUpperCase(),
               chain: this.knownTokens[symbol][chain].chain,
               address: this.knownTokens[symbol][chain].address,
-              source: "predefined"
-            }
+              source: "predefined",
+            },
           });
         } else if (!chain) {
           return JSON.stringify({
@@ -77,8 +84,8 @@ export class DexScreenerActionProvider extends ActionProvider {
             data: {
               symbol: symbol.toUpperCase(),
               chains: this.knownTokens[symbol],
-              source: "predefined"
-            }
+              source: "predefined",
+            },
           });
         }
       }
@@ -91,20 +98,19 @@ export class DexScreenerActionProvider extends ActionProvider {
         return JSON.stringify({
           success: false,
           error: "Token not found",
-          message: `No trading pairs found for ${symbol}${chain ? ` on ${chain}` : ""}`
+          message: `No trading pairs found for ${symbol}${chain ? ` on ${chain}` : ""}`,
         });
       }
 
       // Filter and sort results
-      let pairs = result.pairs.filter((pair: any) => 
-        pair.baseToken.symbol.toLowerCase() === symbol || 
-        pair.quoteToken.symbol.toLowerCase() === symbol
+      let pairs = result.pairs.filter(
+        (pair: any) =>
+          pair.baseToken.symbol.toLowerCase() === symbol ||
+          pair.quoteToken.symbol.toLowerCase() === symbol,
       );
 
       if (chain) {
-        pairs = pairs.filter((pair: any) => 
-          pair.chainId?.toLowerCase() === chain
-        );
+        pairs = pairs.filter((pair: any) => pair.chainId?.toLowerCase() === chain);
       }
 
       // Sort by liquidity (descending)
@@ -118,7 +124,7 @@ export class DexScreenerActionProvider extends ActionProvider {
         return JSON.stringify({
           success: false,
           error: "No matching pairs found",
-          message: `Token ${symbol} not found${chain ? ` on ${chain}` : ""} or no trading pairs available`
+          message: `Token ${symbol} not found${chain ? ` on ${chain}` : ""} or no trading pairs available`,
         });
       }
 
@@ -146,25 +152,27 @@ export class DexScreenerActionProvider extends ActionProvider {
           symbol: symbol.toUpperCase(),
           totalPairs: pairs.length,
           topPairs: topPairs,
-          source: "dexscreener_api"
-        }
+          source: "dexscreener_api",
+        },
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "API Error",
-        message: error instanceof Error ? error.message : String(error)
+        message: error instanceof Error ? error.message : String(error),
       });
     }
   }
 
   /**
    * Get token contract address by symbol.
+   *
+   * @param args
    */
   @CreateAction({
     name: "get_token_address",
-    description: "Get token contract address by symbol. Returns the contract address for the specified token.",
+    description:
+      "Get token contract address by symbol. Returns the contract address for the specified token.",
     schema: GetTokenAddressSchema,
   })
   async getTokenAddress(args: z.infer<typeof GetTokenAddressSchema>): Promise<string> {
@@ -182,7 +190,7 @@ export class DexScreenerActionProvider extends ActionProvider {
             success: true,
             address: parsed.data.address,
             chain: parsed.data.chain,
-            symbol: args.symbol.toUpperCase()
+            symbol: args.symbol.toUpperCase(),
           });
         } else if (parsed.data.chains) {
           const firstChain = Object.keys(parsed.data.chains)[0];
@@ -191,7 +199,7 @@ export class DexScreenerActionProvider extends ActionProvider {
             address: parsed.data.chains[firstChain].address,
             chain: parsed.data.chains[firstChain].chain,
             symbol: args.symbol.toUpperCase(),
-            note: "Multiple chains available, returned first one"
+            note: "Multiple chains available, returned first one",
           });
         }
       }
@@ -199,7 +207,7 @@ export class DexScreenerActionProvider extends ActionProvider {
       if (parsed.data.topPairs && parsed.data.topPairs.length > 0) {
         const topPair = parsed.data.topPairs[0];
         const targetSymbol = args.symbol.toLowerCase();
-        
+
         let tokenAddress: string;
         if (topPair.baseToken.symbol.toLowerCase() === targetSymbol) {
           tokenAddress = topPair.baseToken.address;
@@ -212,31 +220,33 @@ export class DexScreenerActionProvider extends ActionProvider {
           address: tokenAddress,
           chain: topPair.chainId,
           symbol: args.symbol.toUpperCase(),
-          pairAddress: topPair.pairAddress
+          pairAddress: topPair.pairAddress,
         });
       }
 
       return JSON.stringify({
         success: false,
         error: "Address not found",
-        message: "Unable to determine token address from search results"
+        message: "Unable to determine token address from search results",
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "Processing Error",
-        message: error instanceof Error ? error.message : String(error)
+        message: error instanceof Error ? error.message : String(error),
       });
     }
   }
 
   /**
    * Get trading pairs information for a token address.
+   *
+   * @param args
    */
   @CreateAction({
     name: "get_token_pairs",
-    description: "Get detailed trading pairs information for a specific token address from DexScreener.",
+    description:
+      "Get detailed trading pairs information for a specific token address from DexScreener.",
     schema: GetTokenPairsSchema,
   })
   async getTokenPairs(args: z.infer<typeof GetTokenPairsSchema>): Promise<string> {
@@ -247,7 +257,7 @@ export class DexScreenerActionProvider extends ActionProvider {
         return JSON.stringify({
           success: false,
           error: "No pairs found",
-          message: `No trading pairs found for address ${args.tokenAddress}`
+          message: `No trading pairs found for address ${args.tokenAddress}`,
         });
       }
 
@@ -255,9 +265,7 @@ export class DexScreenerActionProvider extends ActionProvider {
       let pairs = result.pairs;
       if (args.chain) {
         const targetChain = this.chainAliases[args.chain.toLowerCase()] || args.chain.toLowerCase();
-        pairs = pairs.filter((pair: any) => 
-          pair.chainId?.toLowerCase() === targetChain
-        );
+        pairs = pairs.filter((pair: any) => pair.chainId?.toLowerCase() === targetChain);
       }
 
       // Sort by liquidity
@@ -288,15 +296,14 @@ export class DexScreenerActionProvider extends ActionProvider {
         data: {
           tokenAddress: args.tokenAddress,
           totalPairs: formattedPairs.length,
-          pairs: formattedPairs
-        }
+          pairs: formattedPairs,
+        },
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
         error: "API Error",
-        message: error instanceof Error ? error.message : String(error)
+        message: error instanceof Error ? error.message : String(error),
       });
     }
   }
@@ -304,8 +311,15 @@ export class DexScreenerActionProvider extends ActionProvider {
   /**
    * Check if the action provider supports the given network.
    * DexScreener works with multiple networks, so this always returns true.
+   *
+   * @param network
    */
   supportsNetwork(network: Network): boolean {
     return true;
   }
-} 
+}
+
+/**
+ * Factory function to create a DexScreenerActionProvider instance
+ */
+export const dexscreenerActionProvider = () => new DexScreenerActionProvider();

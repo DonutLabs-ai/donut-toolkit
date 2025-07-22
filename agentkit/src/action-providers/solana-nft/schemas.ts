@@ -23,4 +23,4 @@ export const GetSolanaNftInfoSchema = z
         "Optional address to check NFT ownership for. If not provided, uses the wallet's address",
       ),
   })
-  .describe("Get NFT information and ownership details"); 
+  .describe("Get NFT information and ownership details");

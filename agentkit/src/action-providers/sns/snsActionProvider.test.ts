@@ -146,7 +146,7 @@ describe("SNSActionProvider", () => {
         registrationDate: "2024-01-01",
         expiryDate: "2025-01-01",
         subdomains: [],
-        records: {}
+        records: {},
       };
 
       mockApi.getDomainInfo.mockResolvedValue(mockInfo);
@@ -234,4 +234,4 @@ describe("SNSActionProvider", () => {
       expect(parsed.error).toBe("Search Error");
     });
   });
-}); 
+});

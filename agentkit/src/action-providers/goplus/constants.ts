@@ -33,7 +33,7 @@ export const REQUEST_CONFIG = {
  */
 export const RISK_LEVELS = {
   VERY_LOW: "very_low",
-  LOW: "low", 
+  LOW: "low",
   MEDIUM: "medium",
   HIGH: "high",
   VERY_HIGH: "very_high",
@@ -69,25 +69,25 @@ export const ERROR_MESSAGES = {
 export const RISK_FACTORS = {
   // Contract risks
   HONEYPOT_RISK: "honeypot_risk",
-  OWNERSHIP_RENOUNCED: "ownership_renounced", 
+  OWNERSHIP_RENOUNCED: "ownership_renounced",
   CAN_TAKE_BACK_OWNERSHIP: "can_take_back_ownership",
   OWNER_CHANGE_BALANCE: "owner_change_balance",
   HIDDEN_OWNER: "hidden_owner",
   SELFDESTRUCT: "selfdestruct",
-  
+
   // Trading risks
   CANNOT_BUY: "cannot_buy",
-  CANNOT_SELL_ALL: "cannot_sell_all", 
+  CANNOT_SELL_ALL: "cannot_sell_all",
   SLIPPAGE_MODIFIABLE: "slippage_modifiable",
   TRADING_COOLDOWN: "trading_cooldown",
-  
+
   // Economic risks
   HIGH_TAX: "high_tax",
   TRANSFER_PAUSABLE: "transfer_pausable",
   BLACKLISTED: "blacklisted",
   WHITELISTED: "whitelisted",
-  
+
   // Liquidity risks
   LOW_LIQUIDITY: "low_liquidity",
   FAKE_TOKEN: "fake_token",
-} as const; 
+} as const;

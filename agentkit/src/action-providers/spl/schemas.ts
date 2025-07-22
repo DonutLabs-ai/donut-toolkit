@@ -8,7 +8,12 @@ export const TransferTokenSchema = z
     recipient: z.string().describe("The recipient's Solana address"),
     mintAddress: z.string().describe("The SPL token's mint address"),
     amount: z.number().positive().describe("Amount of tokens to transfer"),
-    decimals: z.number().int().min(0).max(18).describe("Token decimals (e.g., 6 for USDC, 9 for SOL)"),
+    decimals: z
+      .number()
+      .int()
+      .min(0)
+      .max(18)
+      .describe("Token decimals (e.g., 6 for USDC, 9 for SOL)"),
   })
   .describe("Transfer SPL tokens to another Solana address");
 

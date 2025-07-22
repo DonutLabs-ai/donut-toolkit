@@ -70,8 +70,8 @@ describe("DexScreenerActionProvider", () => {
             liquidity: { usd: 1000000 },
             volume: { h24: 500000 },
             priceChange: { h24: 0.5 },
-          }
-        ]
+          },
+        ],
       };
 
       mockApi.searchToken.mockResolvedValue(mockApiResponse);
@@ -114,8 +114,8 @@ describe("DexScreenerActionProvider", () => {
             quoteToken: { symbol: "MATIC", address: "0x0000000000000000000000" },
             priceUsd: "1.00",
             liquidity: { usd: 500000 },
-          }
-        ]
+          },
+        ],
       };
 
       mockApi.searchToken.mockResolvedValue(mockApiResponse);
@@ -150,8 +150,8 @@ describe("DexScreenerActionProvider", () => {
             quoteToken: { symbol: "ETH", address: "0xeeeeeeeeeeeeeeeeeeeeee" },
             priceUsd: "1.00",
             liquidity: { usd: 1000000 },
-          }
-        ]
+          },
+        ],
       };
 
       mockApi.searchToken.mockResolvedValue(mockApiResponse);
@@ -178,14 +178,14 @@ describe("DexScreenerActionProvider", () => {
             priceUsd: "1.00",
             liquidity: { usd: 1000000 },
             volume: { h24: 500000 },
-          }
-        ]
+          },
+        ],
       };
 
       mockApi.getTokenPairs.mockResolvedValue(mockApiResponse);
 
-      const result = await provider.getTokenPairs({ 
-        tokenAddress: "0xA0b86a33E6785C" 
+      const result = await provider.getTokenPairs({
+        tokenAddress: "0xA0b86a33E6785C",
       });
       const parsed = JSON.parse(result);
 
@@ -198,8 +198,8 @@ describe("DexScreenerActionProvider", () => {
     it("should handle no pairs found", async () => {
       mockApi.getTokenPairs.mockResolvedValue({ pairs: [] });
 
-      const result = await provider.getTokenPairs({ 
-        tokenAddress: "0xInvalidAddress" 
+      const result = await provider.getTokenPairs({
+        tokenAddress: "0xInvalidAddress",
       });
       const parsed = JSON.parse(result);
 
@@ -217,19 +217,19 @@ describe("DexScreenerActionProvider", () => {
             liquidity: { usd: 1000000 },
           },
           {
-            pairAddress: "0x456", 
+            pairAddress: "0x456",
             chainId: "polygon",
             baseToken: { symbol: "USDC", address: "0xA0b86a33E6785C" },
             liquidity: { usd: 500000 },
-          }
-        ]
+          },
+        ],
       };
 
       mockApi.getTokenPairs.mockResolvedValue(mockApiResponse);
 
-      const result = await provider.getTokenPairs({ 
+      const result = await provider.getTokenPairs({
         tokenAddress: "0xA0b86a33E6785C",
-        chain: "ethereum"
+        chain: "ethereum",
       });
       const parsed = JSON.parse(result);
 
@@ -243,8 +243,8 @@ describe("DexScreenerActionProvider", () => {
     it("should handle API errors in getTokenPairs", async () => {
       mockApi.getTokenPairs.mockRejectedValue(new Error("Network error"));
 
-      const result = await provider.getTokenPairs({ 
-        tokenAddress: "0xA0b86a33E6785C" 
+      const result = await provider.getTokenPairs({
+        tokenAddress: "0xA0b86a33E6785C",
       });
       const parsed = JSON.parse(result);
 
@@ -253,4 +253,4 @@ describe("DexScreenerActionProvider", () => {
       expect(parsed.message).toBe("Network error");
     });
   });
-}); 
+});

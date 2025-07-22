@@ -7,7 +7,11 @@ export const CreateTokenSchema = z
   .object({
     name: z.string().min(1).max(50).describe("The name of the token (1-50 characters)"),
     symbol: z.string().min(1).max(10).describe("The symbol of the token (1-10 characters)"),
-    description: z.string().min(1).max(500).describe("The description of the token (1-500 characters)"),
+    description: z
+      .string()
+      .min(1)
+      .max(500)
+      .describe("The description of the token (1-500 characters)"),
     imageUrl: z.string().url().describe("URL of the image file for the token"),
     twitter: z.string().optional().describe("The Twitter/X handle of the token (optional)"),
     telegram: z.string().optional().describe("The Telegram handle of the token (optional)"),
@@ -44,7 +48,11 @@ export const CreateAndBuyTokenSchema = z
   .object({
     name: z.string().min(1).max(50).describe("The name of the token (1-50 characters)"),
     symbol: z.string().min(1).max(10).describe("The symbol of the token (1-10 characters)"),
-    description: z.string().min(1).max(500).describe("The description of the token (1-500 characters)"),
+    description: z
+      .string()
+      .min(1)
+      .max(500)
+      .describe("The description of the token (1-500 characters)"),
     imageUrl: z.string().url().describe("URL of the image file for the token"),
     twitter: z.string().optional().describe("The Twitter/X handle of the token (optional)"),
     telegram: z.string().optional().describe("The Telegram handle of the token (optional)"),
@@ -67,4 +75,4 @@ export const CreateAndBuyTokenSchema = z
       .default(0.0005)
       .describe("The priority fee in SOL (default: 0.0005)"),
   })
-  .describe("Create a new token and optionally buy it on Pump.fun"); 
+  .describe("Create a new token and optionally buy it on Pump.fun");

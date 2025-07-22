@@ -4,11 +4,11 @@ import { SvmWalletProvider } from "../../wallet-providers/svmWalletProvider";
 import { z } from "zod";
 import { CreateAction } from "../actionDecorator";
 import { GetNftListingsSchema, BuyNftListingSchema, GetNftInfoSchema } from "./schemas";
-import { 
-  MagicEdenActionProviderConfig, 
-  MagicEdenListing, 
+import {
+  MagicEdenActionProviderConfig,
+  MagicEdenListing,
   MagicEdenBuyTransactionResponse,
-  MagicEdenNftInfo 
+  MagicEdenNftInfo,
 } from "./types";
 import { PublicKey, VersionedTransaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
@@ -23,12 +23,12 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
 
   /**
    * Creates a new Magic Eden Action Provider instance.
-   * 
+   *
    * @param config - Configuration options for the provider
    */
   constructor(config: MagicEdenActionProviderConfig = {}) {
     super("magiceden", []);
-    
+
     // API Key management following coinbase_agentkit pattern
     this.apiKey = config.apiKey || process.env.MAGIC_EDEN_API_KEY;
     this.baseUrl = config.baseUrl || "https://api-mainnet.magiceden.dev/v2";
@@ -37,7 +37,7 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
 
   /**
    * Get NFT listings from Magic Eden marketplace.
-   * 
+   *
    * @param walletProvider - The wallet provider (not used for this read-only operation)
    * @param args - Parameters including mint hash and optional pagination
    * @returns A JSON string containing the NFT listings or error message
@@ -63,27 +63,27 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
   })
   async getNftListings(
     walletProvider: SvmWalletProvider,
-    args: z.infer<typeof GetNftListingsSchema>
+    args: z.infer<typeof GetNftListingsSchema>,
   ): Promise<string> {
     try {
       const url = `${this.baseUrl}/tokens/${args.mintHash}/listings`;
       const params = new URLSearchParams();
-      
+
       if (args.offset !== undefined) {
-        params.append('offset', args.offset.toString());
+        params.append("offset", args.offset.toString());
       }
-      
+
       if (args.limit !== undefined) {
-        params.append('limit', Math.min(args.limit, 100).toString());
+        params.append("limit", Math.min(args.limit, 100).toString());
       }
-      
+
       const fullUrl = params.toString() ? `${url}?${params.toString()}` : url;
-      
+
       const response = await fetch(fullUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {}),
+          "Content-Type": "application/json",
+          ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
         },
         signal: AbortSignal.timeout(this.timeout),
       });
@@ -93,7 +93,7 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
       }
 
       const listings: MagicEdenListing[] = await response.json();
-      
+
       if (!listings || listings.length === 0) {
         return JSON.stringify({
           success: true,
@@ -120,7 +120,6 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
         mintHash: args.mintHash,
         message: `Found ${listings.length} active listings for NFT ${args.mintHash}`,
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
@@ -132,7 +131,7 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
 
   /**
    * Buy an NFT listing from Magic Eden marketplace.
-   * 
+   *
    * @param walletProvider - The wallet provider to use for the purchase
    * @param args - Parameters including mint hash, max price, and optional seller
    * @returns A JSON string containing the unsigned transaction or error message
@@ -160,13 +159,15 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
   })
   async buyNftListing(
     walletProvider: SvmWalletProvider,
-    args: z.infer<typeof BuyNftListingSchema>
+    args: z.infer<typeof BuyNftListingSchema>,
   ): Promise<string> {
     try {
       // Step 1: Get NFT listings
-      const listingsResponse = await this.getNftListings(walletProvider, { mintHash: args.mintHash });
+      const listingsResponse = await this.getNftListings(walletProvider, {
+        mintHash: args.mintHash,
+      });
       const listingsData = JSON.parse(listingsResponse);
-      
+
       if (!listingsData.success || listingsData.listings.length === 0) {
         return JSON.stringify({
           success: false,
@@ -177,13 +178,13 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
 
       // Step 2: Find the best listing
       let selectedListing = listingsData.listings[0];
-      
+
       // Filter by seller if specified
       if (args.seller) {
         const sellerListings = listingsData.listings.filter(
-          (listing: any) => listing.seller === args.seller
+          (listing: any) => listing.seller === args.seller,
         );
-        
+
         if (sellerListings.length === 0) {
           return JSON.stringify({
             success: false,
@@ -191,7 +192,7 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
             message: `No listings found from seller ${args.seller} for NFT ${args.mintHash}`,
           });
         }
-        
+
         selectedListing = sellerListings[0];
       }
 
@@ -209,8 +210,9 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
       const walletPublicKey = walletProvider.getPublicKey();
       const balance = await connection.getBalance(walletPublicKey);
       const balanceSOL = balance / LAMPORTS_PER_SOL;
-      
-      if (balanceSOL < selectedListing.priceSOL + 0.01) { // 0.01 SOL buffer for fees
+
+      if (balanceSOL < selectedListing.priceSOL + 0.01) {
+        // 0.01 SOL buffer for fees
         return JSON.stringify({
           success: false,
           error: "Insufficient SOL balance",
@@ -222,7 +224,7 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
       const buyTransactionResponse = await this.getBuyTransaction(
         walletProvider,
         args.mintHash,
-        selectedListing
+        selectedListing,
       );
 
       if (!buyTransactionResponse.success) {
@@ -232,7 +234,7 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
       return JSON.stringify({
         success: true,
         unsignedTransaction: buyTransactionResponse.unsignedTransaction,
-        transactionType: 'magic_eden_buy',
+        transactionType: "magic_eden_buy",
         nftMint: args.mintHash,
         price: selectedListing.price,
         priceSOL: selectedListing.priceSOL,
@@ -241,7 +243,6 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
         auctionHouse: selectedListing.auctionHouse,
         message: `Unsigned buy transaction created for NFT ${args.mintHash} at ${selectedListing.priceSOL} SOL`,
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
@@ -253,7 +254,7 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
 
   /**
    * Get NFT information from Magic Eden.
-   * 
+   *
    * @param walletProvider - The wallet provider (not used for this read-only operation)
    * @param args - Parameters including mint hash
    * @returns A JSON string containing the NFT information or error message
@@ -276,16 +277,16 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
   })
   async getNftInfo(
     walletProvider: SvmWalletProvider,
-    args: z.infer<typeof GetNftInfoSchema>
+    args: z.infer<typeof GetNftInfoSchema>,
   ): Promise<string> {
     try {
       const url = `${this.baseUrl}/tokens/${args.mintHash}`;
-      
+
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {}),
+          "Content-Type": "application/json",
+          ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
         },
         signal: AbortSignal.timeout(this.timeout),
       });
@@ -295,7 +296,7 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
       }
 
       const nftInfo: MagicEdenNftInfo = await response.json();
-      
+
       return JSON.stringify({
         success: true,
         nftInfo: {
@@ -313,7 +314,6 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
         },
         message: `Successfully retrieved information for NFT ${args.mintHash}`,
       });
-
     } catch (error) {
       return JSON.stringify({
         success: false,
@@ -325,15 +325,19 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
 
   /**
    * Helper method to get buy transaction from Magic Eden API
+   *
+   * @param walletProvider
+   * @param mintHash
+   * @param listing
    */
   private async getBuyTransaction(
     walletProvider: SvmWalletProvider,
     mintHash: string,
-    listing: any
+    listing: any,
   ): Promise<{ success: boolean; unsignedTransaction?: string; error?: string; message?: string }> {
     try {
       const buyer = walletProvider.getAddress();
-      
+
       const queryParams = new URLSearchParams({
         buyer: buyer,
         seller: listing.seller,
@@ -344,12 +348,12 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
       });
 
       const url = `${this.baseUrl}/instructions/buy_now?${queryParams.toString()}`;
-      
+
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {}),
+          "Content-Type": "application/json",
+          ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
         },
         signal: AbortSignal.timeout(this.timeout),
       });
@@ -359,16 +363,15 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
       }
 
       const data: MagicEdenBuyTransactionResponse = await response.json();
-      
+
       // Convert the transaction data to base64
       const transactionBuffer = Buffer.from(data.v0.tx.data);
-      const unsignedTransaction = transactionBuffer.toString('base64');
-      
+      const unsignedTransaction = transactionBuffer.toString("base64");
+
       return {
         success: true,
         unsignedTransaction: unsignedTransaction,
       };
-
     } catch (error) {
       return {
         success: false,
@@ -381,7 +384,7 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
   /**
    * Checks if the action provider supports the given network.
    * Only supports Solana networks.
-   * 
+   *
    * @param network - The network to check support for
    * @returns True if the network is a Solana network
    */
@@ -392,9 +395,9 @@ export class MagicEdenActionProvider extends ActionProvider<SvmWalletProvider> {
 
 /**
  * Factory function to create a new Magic Eden Action Provider instance.
- * 
+ *
  * @param config - Configuration options for the provider
  * @returns A new Magic Eden Action Provider instance
  */
-export const magicEdenActionProvider = (config?: MagicEdenActionProviderConfig) => 
+export const magicEdenActionProvider = (config?: MagicEdenActionProviderConfig) =>
   new MagicEdenActionProvider(config);
