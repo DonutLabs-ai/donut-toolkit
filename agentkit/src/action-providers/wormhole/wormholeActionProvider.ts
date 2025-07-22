@@ -2,7 +2,6 @@ import { z } from "zod";
 import { ActionProvider } from "../actionProvider";
 import { CreateAction } from "../actionDecorator";
 import {
-  TransferTokenSchema,
   GetTransferStatusSchema,
   GetSupportedChainsSchema,
   GetTokenInfoSchema,
@@ -26,90 +25,6 @@ export class WormholeActionProvider extends ActionProvider {
     this.api = new WormholeAPI();
   }
 
-  /**
-   * Transfer tokens across chains using Wormhole bridge.
-   *
-   * @param args
-   */
-  @CreateAction({
-    name: "transfer_token",
-    description:
-      "Transfer tokens from one blockchain to another using Wormhole bridge. Supports major chains like Ethereum, Solana, Polygon, etc.",
-    schema: TransferTokenSchema,
-  })
-  async transferToken(args: z.infer<typeof TransferTokenSchema>): Promise<string> {
-    try {
-      const { fromChain, toChain, tokenAddress, amount, recipientAddress } = args;
-
-      // Validate inputs
-      if (fromChain.toLowerCase() === toChain.toLowerCase()) {
-        return JSON.stringify({
-          success: false,
-          error: "Invalid transfer",
-          message: "Source and destination chains cannot be the same",
-        });
-      }
-
-      if (!this.api.isChainSupported(fromChain)) {
-        return JSON.stringify({
-          success: false,
-          error: "Unsupported chain",
-          message: `Source chain '${fromChain}' is not supported by Wormhole`,
-        });
-      }
-
-      if (!this.api.isChainSupported(toChain)) {
-        return JSON.stringify({
-          success: false,
-          error: "Unsupported chain",
-          message: `Destination chain '${toChain}' is not supported by Wormhole`,
-        });
-      }
-
-      // Validate amount
-      if (parseFloat(amount) <= 0) {
-        return JSON.stringify({
-          success: false,
-          error: "Invalid amount",
-          message: "Transfer amount must be greater than 0",
-        });
-      }
-
-      // Initiate transfer
-      const result = await this.api.initiateTransfer({
-        fromChain,
-        toChain,
-        tokenAddress,
-        amount,
-        recipientAddress,
-      });
-
-      return JSON.stringify({
-        success: true,
-        data: {
-          transferId: result.transferId,
-          sourceChain: result.sourceChain,
-          destinationChain: result.destinationChain,
-          tokenAddress: result.tokenAddress,
-          amount: result.amount,
-          recipientAddress: result.recipientAddress,
-          status: result.status,
-          message: result.message,
-          next_steps: [
-            "Wait for the transfer to be processed",
-            "Use get_transfer_status to check progress",
-            "The transfer typically takes 5-15 minutes to complete",
-          ],
-        },
-      });
-    } catch (error) {
-      return JSON.stringify({
-        success: false,
-        error: "Transfer Error",
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
 
   /**
    * Get the status of a cross-chain transfer.

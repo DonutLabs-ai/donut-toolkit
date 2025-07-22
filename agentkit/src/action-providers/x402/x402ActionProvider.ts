@@ -2,10 +2,9 @@ import { z } from "zod";
 import { ActionProvider } from "../actionProvider";
 import { Network } from "../../network";
 import { CreateAction } from "../actionDecorator";
-import { HttpRequestSchema, RetryWithX402Schema, DirectX402RequestSchema } from "./schemas";
+import { HttpRequestSchema } from "./schemas";
 import { EvmWalletProvider } from "../../wallet-providers";
 import axios, { AxiosError } from "axios";
-import { withPaymentInterceptor, decodeXPaymentResponse } from "x402-axios";
 import type { PaymentRequirements } from "x402";
 // @ts-ignore
 import { PaymentRequirementsSchema } from "x402/types";
@@ -91,158 +90,7 @@ If you receive a 402 Payment Required response, use retry_http_request_with_x402
     }
   }
 
-  /**
-   * Retries a request with x402 payment after receiving a 402 response.
-   *
-   * @param walletProvider - The wallet provider to use for making the payment
-   * @param args - The request parameters including URL, method, headers, body, and payment option
-   * @returns A JSON string containing the response with payment details or error information
-   */
-  @CreateAction({
-    name: "retry_http_request_with_x402",
-    description: `
-Retries an HTTP request with x402 payment after receiving a 402 Payment Required response.
-This should be used after make_http_request returns a 402 response.
 
-EXAMPLE WORKFLOW:
-1. First call make_http_request("http://localhost:3000/protected")
-2. If you get a 402 response, use this action to retry with payment
-3. Pass the entire original response to this action
-
-DO NOT use this action directly without first trying make_http_request!`,
-    schema: RetryWithX402Schema,
-  })
-  async retryWithX402(
-    walletProvider: EvmWalletProvider,
-    args: z.infer<typeof RetryWithX402Schema>,
-  ): Promise<string> {
-    try {
-      // Validate the payment option matches the URL
-      if (args.paymentOption.resource !== args.url) {
-        return JSON.stringify({
-          status: "error_invalid_payment_option",
-          message: "The payment option resource does not match the request URL",
-          details: {
-            expected: args.url,
-            received: args.paymentOption.resource,
-          },
-        });
-      }
-
-      // Make the request with payment handling
-      const account = walletProvider.toSigner();
-      const api = withPaymentInterceptor(axios.create({}), account);
-
-      const response = await api.request({
-        url: args.url,
-        method: args.method ?? "GET",
-        headers: args.headers ?? undefined,
-        data: args.body,
-      });
-
-      // Check for payment proof
-      const paymentProof = response.headers["x-payment-response"]
-        ? decodeXPaymentResponse(response.headers["x-payment-response"])
-        : null;
-
-      return JSON.stringify({
-        status: "success",
-        data: response.data,
-        message: "Request completed successfully with payment",
-        details: {
-          url: args.url,
-          method: args.method,
-          paymentUsed: {
-            network: args.paymentOption.network,
-            asset: args.paymentOption.asset,
-            amount: args.paymentOption.maxAmountRequired,
-          },
-          paymentProof: paymentProof
-            ? {
-                transaction: paymentProof.transaction,
-                network: paymentProof.network,
-                payer: paymentProof.payer,
-              }
-            : null,
-        },
-      });
-    } catch (error) {
-      return this.handleHttpError(error as AxiosError, args.url);
-    }
-  }
-
-  /**
-   * Makes an HTTP request with automatic x402 payment handling.
-   *
-   * @param walletProvider - The wallet provider to use for automatic payments
-   * @param args - The request parameters including URL, method, headers, and body
-   * @returns A JSON string containing the response with optional payment details or error information
-   */
-  @CreateAction({
-    name: "make_http_request_with_x402",
-    description: `
-⚠️ WARNING: This action automatically handles payments without asking for confirmation!
-Only use this when explicitly told to skip the confirmation flow.
-
-For most cases, you should:
-1. First try make_http_request
-2. Then use retry_http_request_with_x402 if payment is required
-
-This action combines both steps into one, which means:
-- No chance to review payment details before paying
-- No confirmation step
-- Automatic payment processing
-
-EXAMPLES:
-- Production: make_http_request_with_x402("https://api.example.com/data")
-- Local dev: make_http_request_with_x402("http://localhost:3000/protected")
-
-Unless specifically instructed otherwise, prefer the two-step approach with make_http_request first.`,
-    schema: DirectX402RequestSchema,
-  })
-  async makeHttpRequestWithX402(
-    walletProvider: EvmWalletProvider,
-    args: z.infer<typeof DirectX402RequestSchema>,
-  ): Promise<string> {
-    try {
-      const account = walletProvider.toSigner();
-      const api = withPaymentInterceptor(axios.create({}), account);
-
-      const response = await api.request({
-        url: args.url,
-        method: args.method ?? "GET",
-        headers: args.headers ?? undefined,
-        data: args.body,
-      });
-
-      // Check for payment proof
-      const paymentProof = response.headers["x-payment-response"]
-        ? decodeXPaymentResponse(response.headers["x-payment-response"])
-        : null;
-
-      return JSON.stringify(
-        {
-          success: true,
-          message: "Request completed successfully (payment handled automatically if required)",
-          url: args.url,
-          method: args.method,
-          status: response.status,
-          data: response.data,
-          paymentProof: paymentProof
-            ? {
-                transaction: paymentProof.transaction,
-                network: paymentProof.network,
-                payer: paymentProof.payer,
-              }
-            : null,
-        },
-        null,
-        2,
-      );
-    } catch (error) {
-      return this.handleHttpError(error as AxiosError, args.url);
-    }
-  }
 
   /**
    * Checks if the action provider supports the given network.

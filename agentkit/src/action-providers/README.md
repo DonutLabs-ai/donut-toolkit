@@ -21,7 +21,6 @@ action-providers/
 ├── magiceden/                   # Magic Eden NFT 市场
 ├── sns/                         # Solana 域名服务
 ├── solana-nft/                  # Solana NFT 操作
-├── x402/                        # X402 支付协议
 │
 ├── 🟡 数据查询 Providers (跨链兼容)
 ├── defillama/                   # DefiLlama 数据
@@ -31,9 +30,12 @@ action-providers/
 ├── allora/                      # Allora 网络数据
 ├── goplus/                      # GoPlus 安全分析
 │
-└── 🟠 跨链桥接 Providers
-    ├── wormhole/                # Wormhole 跨链桥
-    └── onramp/                  # 法币入金服务
+├── 🟠 跨链桥接 Providers
+├── wormhole/                # Wormhole 跨链数据
+├── onramp/                  # 法币入金服务
+│
+└── 🔴 EVM 专用 Providers
+    └── x402/                    # X402 HTTP 支付协议 (Base)
 ```
 
 ## 🚀 快速开始

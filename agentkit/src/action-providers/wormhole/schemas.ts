@@ -1,19 +1,6 @@
 import { z } from "zod";
 
 /**
- * Schema for transferring tokens across chains via Wormhole.
- */
-export const TransferTokenSchema = z
-  .object({
-    fromChain: z.string().describe("Source chain (e.g., 'ethereum', 'solana', 'polygon')"),
-    toChain: z.string().describe("Destination chain (e.g., 'ethereum', 'solana', 'polygon')"),
-    tokenAddress: z.string().describe("Token contract address on source chain"),
-    amount: z.string().describe("Amount to transfer (in token's base units)"),
-    recipientAddress: z.string().describe("Recipient address on destination chain"),
-  })
-  .describe("Transfer tokens from one chain to another using Wormhole bridge");
-
-/**
  * Schema for getting transfer status.
  */
 export const GetTransferStatusSchema = z

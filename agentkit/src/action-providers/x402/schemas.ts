@@ -21,28 +21,3 @@ export const HttpRequestSchema = BaseHttpRequestSchema.strip().describe(
   "Instructions for making a basic HTTP request",
 );
 
-// Schema for retrying a failed request with x402 payment
-export const RetryWithX402Schema = BaseHttpRequestSchema.extend({
-  paymentOption: z
-    .object({
-      scheme: z.string(),
-      network: z.string(),
-      maxAmountRequired: z.string(),
-      resource: z.string(),
-      description: z.string(),
-      mimeType: z.string(),
-      outputSchema: z.record(z.any()),
-      payTo: z.string(),
-      maxTimeoutSeconds: z.number(),
-      asset: z.string(),
-      extra: z.record(z.any()).optional().nullable(),
-    })
-    .describe("The payment option to use for this request"),
-})
-  .strip()
-  .describe("Instructions for retrying a request with x402 payment after receiving a 402 response");
-
-// Schema for direct x402 payment request (with warning)
-export const DirectX402RequestSchema = BaseHttpRequestSchema.strip().describe(
-  "Instructions for making an HTTP request with automatic x402 payment handling. WARNING: This bypasses user confirmation - only use when explicitly told to skip confirmation!",
-);

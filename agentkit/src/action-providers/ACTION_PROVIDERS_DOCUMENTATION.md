@@ -2,19 +2,57 @@
 
 本文档详细列出了 AgentKit 中所有可用的 Action Providers 及其支持的 Actions。
 
-**主要专注**: Solana 生态系统，同时保留对其他有价值工具的数据查询能力。
+## 📊 总览统计
+
+| **指标** | **数量** |
+|----------|----------|
+| **总计 Action Providers** | 22 |
+| **总计 Actions** | 47 |
+| **读操作 (查询)** | 31 |
+| **写操作 (需签名)** | 16 |
+| **仅 EVM 网络** | 2 |
+| **仅 SVM 网络** | 13 |
+| **网络无关** | 6 |
+| **多网络支持** | 1 |
 
 ## 📋 图标说明
 
 ### Action 类型
 - 🔐 **需要钱包签名** - 涉及区块链交易的写操作，需要用户钱包签名
 - 📖 **仅查询操作** - 只读操作，不需要钱包签名，用于获取信息
+- 🔧 **模板示例** - 开发模板，仅用于参考实现
 
 ### 网络兼容性
-- 🟢 **Solana 原生** - 完全支持，推荐使用
-- 🟡 **数据通用** - 跨链数据查询，Solana 用户可安全使用
-- 🟠 **跨链桥接** - 帮助 Solana 用户进行跨链操作
-- 🔴 **外部网络** - 需要其他网络，仅提供数据查询
+- 🟢 **Solana 原生** - 完全支持 SVM 网络，推荐使用
+- 🟡 **数据通用** - 跨链数据查询，网络无关
+- 🟠 **跨链桥接** - 支持多网络，包含 Solana 支持
+- 🔴 **外部网络** - 仅支持 EVM 网络
+
+## 🗂️ Action Providers 总览
+
+| **Provider** | **网络支持** | **Actions 数量** | **读操作** | **写操作** | **API 密钥要求** | **主要功能** |
+|--------------|--------------|------------------|------------|------------|------------------|-------------|
+| **Allora** 🟡 | Network-agnostic | 3 | 3 | 0 | 无 | 预测市场数据查询 |
+| **DefiLlama** 🟡 | Network-agnostic | 3 | 3 | 0 | 无 | DeFi 协议数据查询 |
+| **DexScreener** 🟠 | Multi-network | 3 | 3 | 0 | 无 | 代币交易对数据 |
+| **Drift** 🔧 | SVM only | 1 | 0 | 0 | 无 | 开发模板 |
+| **GoPlus** 🟡 | Network-agnostic | 5 | 5 | 0 | 无 | 安全分析工具 |
+| **Jupiter** 🟢 | SVM (mainnet) | 1 | 0 | 1 | 无 | DEX 聚合交易 |
+| **Magic Eden** 🟢 | SVM (mainnet) | 3 | 2 | 1 | MAGIC_EDEN_API_KEY (可选) | NFT 市场交易 |
+| **Messari** 🟡 | Network-agnostic | 1 | 1 | 0 | MESSARI_API_KEY | 加密市场研究 |
+| **Meteora** 🟢 | SVM (mainnet/devnet) | 6 | 4 | 2 | 无 | 流动性挖矿 (DLMM) |
+| **Onramp** 🔴 | EVM only | 1 | 1 | 0 | projectId | 法币入金服务 |
+| **Pump.fun** 🟢 | SVM (mainnet) | 3 | 0 | 3 | 无 | Meme 代币创建/交易 |
+| **Pyth** 🟡 | Network-agnostic | 2 | 2 | 0 | 无 | 价格预言机数据 |
+| **Sanctum** 🔧 | SVM only | 1 | 0 | 0 | 无 | 开发模板 |
+| **SNS** 🟢 | SVM only | 4 | 4 | 0 | 无 | Solana 域名服务 |
+| **Solana NFT** 🟢 | SVM only | 2 | 1 | 1 | 无 | NFT 操作工具 |
+| **Solayer** 🔧 | SVM only | 1 | 0 | 0 | 无 | 开发模板 |
+| **SPL Token** 🟢 | SVM only | 2 | 1 | 1 | 无 | SPL 代币操作 |
+| **Voltr** 🔧 | SVM only | 1 | 0 | 0 | 无 | 开发模板 |
+| **Wallet** 🟡 | Network-agnostic | 2 | 1 | 1 | 无 | 钱包基础操作 |
+| **Wormhole** 🟠 | Multi-network | 4 | 4 | 0 | 无 | 跨链数据查询 |
+| **X402** 🔴 | EVM (Base) | 1 | 1 | 0 | 无 | HTTP 请求工具 |
 
 ---
 
@@ -178,10 +216,9 @@
 
 ### WormholeActionProvider 🟠
 **网络支持**: Ethereum, Solana, Polygon, BSC, Avalanche 等  
-**描述**: Wormhole 跨链桥代币转账，支持资产转入 Solana
+**描述**: Wormhole 跨链数据查询，提供链信息和转账状态查询
 
 #### Actions:
-- 🔐 `transfer_token` - 跨链转账代币（可转入 Solana）
 - 📖 `get_transfer_status` - 获取转账状态
 - 📖 `get_supported_chains` - 获取支持的链
 - 📖 `get_token_info` - 获取代币信息
@@ -276,36 +313,83 @@
 3. **缓存策略**: 缓存不经常变化的数据（代币信息、价格等）
 4. **并行操作**: 同时调用多个数据查询 Actions
 
-### 📈 最佳实践
+### 📈 常见用例
 
-#### Solana 原生操作
-1. **SPL 代币**: 优先使用 SPLActionProvider 进行代币操作
-2. **DEX 交易**: Jupiter 提供最佳的 Solana DEX 聚合
-3. **NFT 操作**: 使用 MagicEden 和 SolanaNft 进行 NFT 交易
-4. **域名服务**: 通过 SNS 使用 .sol 域名
+#### DeFi 操作流程
+1. **代币安全检查** → GoPlus `get_solana_token_security`
+2. **价格查询** → Pyth `fetch_price` 或 DexScreener `search_token`
+3. **代币交换** → Jupiter `swap`
+4. **余额查询** → SPL `get_balance`
 
-#### 跨链集成
-1. **资产桥接**: 使用 Wormhole 将其他链资产转入 Solana
-2. **法币入金**: 通过 Onramp 直接购买并转入 Solana
-3. **数据整合**: 利用多链数据 providers 获取全面市场信息
+#### NFT 操作流程
+1. **NFT 信息查询** → Magic Eden `get_nft_info`
+2. **市场挂单查询** → Magic Eden `get_nft_listings`
+3. **购买 NFT** → Magic Eden `buy_nft_listing`
+4. **转移 NFT** → Solana NFT `transfer_nft`
 
-#### 错误处理
-1. **网络检查**: 调用前验证 Action Provider 的网络兼容性
-2. **余额验证**: 交易前检查 SOL 和 SPL 代币余额
-3. **结构化响应**: 所有 Actions 返回统一的 JSON 响应格式
-4. **优雅降级**: 跨链功能不可用时，提供替代方案
+#### 跨链资产管理
+1. **支持链查询** → Wormhole `get_supported_chains`
+2. **费用估算** → Wormhole `estimate_fees`
+3. **跨链转账** → Wormhole `transfer_token`
+4. **状态跟踪** → Wormhole `get_transfer_status`
 
-### 🔄 迁移路径
+### 🔄 错误处理模式
+- **网络验证**: 调用前检查 `supportsNetwork()`
+- **余额检查**: 交易前验证 SOL 和代币余额
+- **统一响应**: 所有 Actions 返回结构化 JSON
+- **优雅降级**: 提供备选方案和清晰错误信息
 
-#### 从其他链迁移到 Solana
-1. **资产转移**: 使用 Wormhole 将 EVM 资产桥接到 Solana
-2. **功能替代**: 
-   - Uniswap → Jupiter
-   - OpenSea → Magic Eden  
-   - ENS → SNS
-3. **DeFi 协议**: 探索 Solana 原生 DeFi（如 Meteora）
+### 🛠️ 开发集成
 
-#### 保持多链兼容性
-1. **数据层统一**: 使用通用数据 providers 获取多链信息
-2. **执行层分离**: 主要执行在 Solana，其他链仅用于数据查询
-3. **用户体验**: 为跨链操作提供清晰的网络要求说明 
+#### 添加新 Action Provider
+1. 继承 `ActionProvider` 基类
+2. 实现 `supportsNetwork()` 方法
+3. 使用 `@CreateAction` 装饰器定义 actions
+4. 创建 Zod schemas 进行参数验证
+5. 导出工厂函数
+
+#### 参考模板
+使用 Drift、Sanctum、Solayer、Voltr 作为实现参考，了解:
+- SVM 网络集成模式
+- Action 定义和参数验证
+- 错误处理和响应格式
+- 测试和文档结构
+
+---
+
+## 🔄 生态系统映射
+
+### 从其他链到 Solana 的功能映射
+
+| **功能类别** | **以太坊/EVM** | **Solana 对应** | **AgentKit Provider** |
+|-------------|---------------|----------------|----------------------|
+| **DEX 聚合** | Uniswap, 1inch | Jupiter | `JupiterActionProvider` |
+| **NFT 市场** | OpenSea, Blur | Magic Eden | `MagicEdenActionProvider` |
+| **域名服务** | ENS | SNS (.sol) | `SNSActionProvider` |
+| **代币操作** | ERC-20 | SPL Token | `SPLActionProvider` |
+| **流动性挖矿** | Uniswap V3 | Meteora DLMM | `MeteoraDLMMActionProvider` |
+| **Meme 代币** | Pump.fun (ETH) | Pump.fun (SOL) | `PumpfunActionProvider` |
+| **跨链桥接** | 各种桥 | Wormhole | `WormholeActionProvider` |
+
+### 多链兼容性策略
+
+| **层级** | **策略** | **适用场景** |
+|----------|----------|-------------|
+| **数据层** | 使用网络无关的 providers | 价格查询、安全分析、市场研究 |
+| **执行层** | 主要在 Solana 执行，其他链仅查询 | DeFi 操作、NFT 交易、代币转账 |
+| **桥接层** | 通过 Wormhole 等协议连接 | 跨链资产转移、多链流动性 |
+| **用户体验** | 统一接口，透明网络要求 | AI Agent 自动选择最优路径 |
+
+---
+
+## 📚 总结
+
+AgentKit 提供了 **22 个 Action Providers** 和 **47 个 Actions**，覆盖:
+
+- **🟢 13 个 Solana 原生** providers (核心功能)
+- **🟡 6 个网络无关** providers (数据查询)
+- **🟠 2 个多网络** providers (跨链功能)
+- **🔴 2 个 EVM 专用** providers (特殊协议)
+- **🔧 4 个开发模板** (参考实现)
+
+通过这些 providers，AI Agents 可以执行完整的 DeFi、NFT、跨链和数据分析工作流，同时保持高度的安全性和可扩展性。 
