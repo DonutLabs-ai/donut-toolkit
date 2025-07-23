@@ -6,6 +6,9 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { CallToolResult, Tool } from "@modelcontextprotocol/sdk/types.js";
 import { AgentKit, Action, ActionProvider, WalletProvider, Network } from "@coinbase/agentkit";
 
+// Export all smart tool functionality
+export * from "./search";
+
 /**
  * The AgentKit MCP tools and tool handler
  */

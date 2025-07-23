@@ -40,11 +40,15 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1",
+    "@pinecone-database/pinecone": "^3.0.0",
+    "reflect-metadata": "^0.1.13",
+    "uuid": "^9.0.1",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.24.3"
   },
   "devDependencies": {
-    "@coinbase/agentkit": "workspace:*"
+    "@coinbase/agentkit": "workspace:*",
+    "@types/uuid": "^9.0.8"
   },
   "peerDependencies": {
     "@coinbase/agentkit": ">=0.1.0"
