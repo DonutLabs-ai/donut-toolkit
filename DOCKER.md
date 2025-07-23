@@ -106,10 +106,6 @@ donut-toolkits/
 NODE_ENV=development
 MCP_SERVER_PORT=3000
 
-# Coinbase Developer Platform
-CDP_API_KEY_NAME=your_cdp_api_key_name
-CDP_API_KEY_PRIVATE_KEY=your_cdp_private_key
-
 # Solana 配置
 SOLANA_PRIVATE_KEY=your_solana_private_key
 
