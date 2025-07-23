@@ -42,6 +42,89 @@ const {
 } = require("@coinbase/agentkit");
 const { zodToJsonSchema } = require("zod-to-json-schema");
 
+/**
+ * Safely stringify objects that might contain circular references
+ */
+function safeJsonStringify(obj) {
+  const seen = new WeakSet();
+  return JSON.stringify(obj, (key, val) => {
+    if (val != null && typeof val === "object") {
+      if (seen.has(val)) {
+        return "[Circular]";
+      }
+      seen.add(val);
+    }
+    return val;
+  });
+}
+
+/**
+ * Simple readonly SVM wallet provider for generating unsigned transactions
+ */
+class ReadonlySvmWalletProvider {
+  constructor({ publicKey, rpcUrl, genesisHash }) {
+    const { PublicKey, Connection } = require("@solana/web3.js");
+    
+    this.publicKey = new PublicKey(publicKey);
+    this.connection = new Connection(rpcUrl || "https://api.mainnet-beta.solana.com");
+    this.genesisHash = genesisHash || "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d";
+  }
+
+  getConnection() {
+    return this.connection;
+  }
+
+  getPublicKey() {
+    return this.publicKey;
+  }
+
+  getAddress() {
+    return this.publicKey.toBase58();
+  }
+
+  getNetwork() {
+    return {
+      protocolFamily: "svm",
+      chainId: this.genesisHash,
+      networkId: "solana-mainnet"
+    };
+  }
+
+  getName() {
+    return "readonly_svm_wallet_provider";
+  }
+
+  async getBalance() {
+    const lamports = await this.connection.getBalance(this.publicKey);
+    return BigInt(lamports);
+  }
+
+  // All signing/sending methods throw errors
+  async signTransaction() {
+    throw new Error("ReadonlySvmWalletProvider cannot sign transactions");
+  }
+
+  async sendTransaction() {
+    throw new Error("ReadonlySvmWalletProvider cannot send transactions");
+  }
+
+  async signAndSendTransaction() {
+    throw new Error("ReadonlySvmWalletProvider cannot sign nor send transactions");
+  }
+
+  async nativeTransfer() {
+    throw new Error("ReadonlySvmWalletProvider cannot perform native transfers");
+  }
+
+  async getSignatureStatus() {
+    throw new Error("ReadonlySvmWalletProvider cannot query signature status");
+  }
+
+  async waitForSignatureResult() {
+    throw new Error("ReadonlySvmWalletProvider cannot wait for signature result");
+  }
+}
+
 // Setup logging
 const LOG_FILE = "/tmp/agentkit-mcp.log";
 
@@ -50,14 +133,34 @@ const LOG_FILE = "/tmp/agentkit-mcp.log";
  */
 function createDummyWalletProvider() {
   try {
-    const testPrivateKeyBase58 = "5MaiiCavjCmn9Hs1o3eznqDEhRwxo7pXiAYez7keQUviUkauRiTMD8DrESdrNjN8zd9mTmVhRvBJeg5vhyvgrAhG";
+    log(`Environment check: DUMMY_WALLET_PUBLIC_KEY = ${process.env.DUMMY_WALLET_PUBLIC_KEY}`);
+    log(`Environment check: DUMMY_WALLET_PRIVATE_KEY = ${process.env.DUMMY_WALLET_PRIVATE_KEY ? 'set' : 'not set'}`);
     
+    const rpcUrl = "https://api.mainnet-beta.solana.com";
+    const genesisHash = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d";
+
+    // --- 优先使用只需公钥的只读钱包 ---
+    if (process.env.DUMMY_WALLET_PUBLIC_KEY) {
+      log(`Creating ReadonlySvmWalletProvider with publicKey: ${process.env.DUMMY_WALLET_PUBLIC_KEY}`);
+      const walletProvider = new ReadonlySvmWalletProvider({
+        publicKey: process.env.DUMMY_WALLET_PUBLIC_KEY,
+        rpcUrl,
+        genesisHash,
+      });
+      log(`ReadonlySvmWalletProvider created successfully: ${walletProvider.getAddress()}`);
+      return walletProvider;
+    }
+
+    // --- 否则回退到需要私钥的 Keypair 钱包 ---
+    const testPrivateKeyBase58 =
+      process.env.DUMMY_WALLET_PRIVATE_KEY ||
+      "5MaiiCavjCmn9Hs1o3eznqDEhRwxo7pXiAYez7keQUviUkauRiTMD8DrESdrNjN8zd9mTmVhRvBJeg5vhyvgrAhG";
+
     const walletProvider = new SolanaKeypairWalletProvider({
       keypair: testPrivateKeyBase58,
-      rpcUrl: "https://api.mainnet-beta.solana.com",
-      genesisHash: "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d"
+      rpcUrl,
+      genesisHash,
     });
-    
     return walletProvider;
   } catch (error) {
     log(`Failed to create dummy wallet provider: ${error.message}`, true);
@@ -292,7 +395,8 @@ async function createAgentKitMcpServer() {
     'MeteoraDLMMActionProvider',
     'MagicEdenActionProvider',
     'SolanaNftActionProvider',
-    'SplActionProvider'
+    'SplActionProvider',
+    'WalletActionProvider'
   ];
   
   for (const provider of providers) {
@@ -320,7 +424,7 @@ async function createAgentKitMcpServer() {
             const originalInvoke = action.invoke;
             action.invoke = async function(args) {
               try {
-                const result = await originalInvoke.call(this, dummyWallet, args);
+                const result = await originalInvoke.call(this, args);
                 
                 if (typeof result === 'string') {
                   try {
@@ -460,14 +564,14 @@ async function createAgentKitMcpServer() {
         content: [
           {
             type: "text",
-            text: typeof result === 'string' ? result : JSON.stringify(result),
+            text: typeof result === 'string' ? result : safeJsonStringify(result),
           },
         ],
       };
     } catch (error) {
       log(`Tool ${request.params.name} failed: ${error.message}`, true);
       
-      // 特殊处理 GoPlus 错误
+
       if (request.params.name.startsWith('GoplusActionProvider_')) {
         log(`[GoPlus Debug] Error type: ${error.constructor.name}`, true);
         log(`[GoPlus Debug] Error stack: ${error.stack}`, true);
