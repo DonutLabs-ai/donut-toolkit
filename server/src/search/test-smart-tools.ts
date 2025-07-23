@@ -46,7 +46,7 @@ async function testSmartTools() {
 }
 
 // Run test only if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (require.main === module) {
   testSmartTools();
 }
 

@@ -44,6 +44,7 @@
     "@coinbase/cdp-sdk": "^1.25.0",
     "@coinbase/coinbase-sdk": "^0.20.0",
     "@jup-ag/api": "^6.0.39",
+    "@pinecone-database/pinecone": "^3.0.3",
     "@solana/spl-token": "^0.4.12",
     "@solana/web3.js": "^1.98.1",
     "axios": "^1.9.0",

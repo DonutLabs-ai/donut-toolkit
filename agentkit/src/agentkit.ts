@@ -1,4 +1,5 @@
-import { WalletProvider, CdpSmartWalletProvider } from "./wallet-providers";
+import { WalletProvider } from "./wallet-providers";
+// TODO: CdpSmartWalletProvider needs to be implemented
 import { Action, ActionProvider, walletActionProvider } from "./action-providers";
 
 /**
@@ -54,14 +55,20 @@ export class AgentKit {
         );
       }
 
-      walletProvider = await CdpSmartWalletProvider.configureWithWallet({
-        apiKeyId: config.cdpApiKeyId,
-        apiKeySecret: config.cdpApiKeySecret,
-        walletSecret: config.cdpWalletSecret,
-      });
+      // TODO: Implement CdpSmartWalletProvider
+      throw new Error("CdpSmartWalletProvider is not yet implemented. Please provide a walletProvider in the config.");
     }
 
     return new AgentKit({ ...config, walletProvider: walletProvider! });
+  }
+
+  /**
+   * Returns the wallet provider used by the AgentKit.
+   *
+   * @returns The wallet provider
+   */
+  public getWalletProvider(): WalletProvider {
+    return this.walletProvider;
   }
 
   /**
