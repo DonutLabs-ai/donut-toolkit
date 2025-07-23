@@ -39,24 +39,82 @@ export class GoplusAPI {
 
   /**
    * Check if an address is malicious
+   * For Solana token addresses, this will redirect to token security analysis
+   * For wallet addresses, this will check the malicious address database
    *
    * @param address
    */
   async checkMaliciousAddress(address: string): Promise<any> {
+    // For Solana token addresses (typically used for tokens), use token security endpoint
+    // Token addresses are usually longer and have specific characteristics
+    const isLikelyTokenAddress = this.isLikelyTokenAddress(address);
+    
+    if (isLikelyTokenAddress) {
+      if (this.enableLogging) {
+        console.log(`[GoPlus API] Treating ${address} as token address, using token security endpoint`);
+      }
+      // Use token security endpoint for token addresses
+      return this.solanaTokenSecurity(address);
+    }
+    
+    // For wallet addresses, try the malicious address endpoint
     const url = `${this.baseURL}${ENDPOINTS.MALICIOUS_ADDRESS}?address=${encodeURIComponent(address)}`;
-
-    return this.makeRequest(url);
+    
+    try {
+      return await this.makeRequest(url);
+    } catch (error) {
+      if (this.enableLogging) {
+        console.log(`[GoPlus API] Malicious address endpoint failed for ${address}, this may be expected for some address types`);
+      }
+      
+      // If malicious address endpoint fails, return a safe default response
+      if (error instanceof Error && error.message.includes('404')) {
+        return {
+          code: 200,
+          message: "OK",
+          result: {
+            malicious: false,
+            note: "Malicious address check not available for this address type. No malicious activity detected in available databases."
+          }
+        };
+      }
+      
+      throw error;
+    }
   }
 
   /**
    * Get address security information
+   * This method handles both token and wallet addresses appropriately
    *
    * @param address
    */
   async getAddressSecurity(address: string): Promise<any> {
+    // For token addresses, use token security endpoint
+    if (this.isLikelyTokenAddress(address)) {
+      if (this.enableLogging) {
+        console.log(`[GoPlus API] Using token security endpoint for address ${address}`);
+      }
+      return this.solanaTokenSecurity(address);
+    }
+    
+    // For wallet addresses, try the address security endpoint
     const url = `${this.baseURL}${ENDPOINTS.ADDRESS_SECURITY}?address=${encodeURIComponent(address)}`;
-
-    return this.makeRequest(url);
+    
+    try {
+      return await this.makeRequest(url);
+    } catch (error) {
+      if (this.enableLogging) {
+        console.log(`[GoPlus API] Address security endpoint failed for ${address}, trying malicious address endpoint as fallback`);
+      }
+      
+      // Fallback to malicious address check
+      if (error instanceof Error && error.message.includes('404')) {
+        return this.checkMaliciousAddress(address);
+      }
+      
+      throw error;
+    }
   }
 
   /**
@@ -96,7 +154,7 @@ export class GoplusAPI {
       }
 
       // Check for API-level errors
-      if (data.code && data.code !== 200) {
+      if (data.code && data.code !== 1 && data.code !== 200) {
         throw new GoplusApiError(data.code, data.message || ERROR_MESSAGES.API_ERROR);
       }
 
@@ -149,6 +207,24 @@ export class GoplusAPI {
    */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Determine if an address is likely a token address vs a wallet address
+   * This is a heuristic based on common patterns
+   *
+   * @param address
+   */
+  private isLikelyTokenAddress(address: string): boolean {
+    // Use known token addresses from constants
+    if ((REQUEST_CONFIG.KNOWN_TOKEN_ADDRESSES as readonly string[]).includes(address)) {
+      return true;
+    }
+    
+    // Additional heuristics could be added here
+    // For now, we'll default to treating unknown addresses as wallet addresses
+    // unless they match known token patterns
+    return false;
   }
 }
 

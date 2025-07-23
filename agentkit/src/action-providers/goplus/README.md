@@ -76,19 +76,23 @@ const result = await agentKit.run("batch_solana_token_security", {
 
 ### 3. `analyze_wallet_security`
 
+**IMPORTANT:** This action is specifically for wallet addresses, not token addresses.
+
 Analyze a Solana wallet address for security risks and suspicious activities.
 
 **Parameters:**
-- `walletAddress` (string): Solana wallet address to analyze
+- `walletAddress` (string): Solana wallet address to analyze (NOT a token address)
 
 **Returns:** Wallet security assessment with risk indicators and recommendations.
 
 **Example:**
 ```typescript
 const result = await agentKit.run("analyze_wallet_security", {
-  walletAddress: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+  walletAddress: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM" // Wallet address
 });
 ```
+
+**Warning:** If you try to use this with a token address (like USDC), you'll get an error message directing you to use `get_solana_token_security` instead.
 
 ### 4. `compare_token_security`
 
@@ -112,19 +116,29 @@ const result = await agentKit.run("compare_token_security", {
 
 ### 5. `check_malicious_address`
 
-Quick check if a Solana address is flagged as malicious in the GoPlus database.
+**IMPORTANT:** This action intelligently routes requests based on address type:
+- For **token addresses** (like USDC): Returns comprehensive token security analysis
+- For **wallet addresses**: Checks the malicious address database
 
 **Parameters:**
 - `address` (string): Solana address to check
 
-**Returns:** Malicious address status and related information.
+**Returns:** For tokens: security analysis. For wallets: malicious status.
 
-**Example:**
+**Examples:**
 ```typescript
-const result = await agentKit.run("check_malicious_address", {
-  address: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+// For token addresses (automatically uses token security analysis)
+const usdcCheck = await agentKit.run("check_malicious_address", {
+  address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" // USDC
+});
+
+// For wallet addresses (uses malicious address database)
+const walletCheck = await agentKit.run("check_malicious_address", {
+  address: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM" // Wallet
 });
 ```
+
+**Note:** For explicit token analysis, prefer using `get_solana_token_security`.
 
 ## Installation and Setup
 
@@ -251,17 +265,32 @@ The provider includes comprehensive error handling:
 
 - **Automatic Retries**: Network failures are automatically retried up to 3 times
 - **Timeout Management**: Requests timeout after 30 seconds by default
-- **Validation**: All addresses are validated before API calls
+- **Address Validation**: All addresses are validated before API calls
+- **Smart Routing**: Automatically detects token vs wallet addresses and routes to appropriate endpoints
 - **Graceful Degradation**: Individual token failures in batch requests don't affect others
+- **Clear Error Messages**: Provides guidance on which action to use for different address types
+
+### Common Error Scenarios
+
+1. **Wrong Action for Address Type**: If you use a wallet action for a token address (or vice versa), you'll get a clear error message with guidance.
+
+2. **404 Errors**: Previously problematic for certain address types, now handled with smart routing and fallbacks.
+
+3. **Invalid Addresses**: Addresses are validated before API calls to prevent unnecessary requests.
 
 ## Integration Examples
 
 ### With PumpFun (Token Creation Safety)
 
 ```typescript
-// Check token security before buying on PumpFun
+// CORRECT: Check token security before buying on PumpFun
 const securityCheck = await agentKit.run("get_solana_token_security", {
   tokenAddress: tokenMint
+});
+
+// ALSO WORKS: Using check_malicious_address (auto-routes to token security)
+const securityCheck2 = await agentKit.run("check_malicious_address", {
+  address: tokenMint
 });
 
 const analysis = JSON.parse(securityCheck);
@@ -316,12 +345,24 @@ if (analysis.success) {
 
 ## Best Practices
 
-1. **Always check security before trading** - Use `get_solana_token_security` before any token purchase
-2. **Use batch analysis for portfolios** - More efficient than individual calls
-3. **Set appropriate timeouts** - Increase timeout for batch requests
-4. **Handle errors gracefully** - Check `success` field in responses
-5. **Cache results when appropriate** - Security data doesn't change frequently
-6. **Monitor risk levels** - Set up alerts for high-risk tokens in portfolios
+1. **Use the right action for the right address type**:
+   - For tokens: Use `get_solana_token_security`
+   - For wallets: Use `analyze_wallet_security`
+   - For quick checks: Use `check_malicious_address` (auto-routes)
+
+2. **Always check security before trading** - Use `get_solana_token_security` before any token purchase
+
+3. **Use batch analysis for portfolios** - More efficient than individual calls
+
+4. **Set appropriate timeouts** - Increase timeout for batch requests
+
+5. **Handle errors gracefully** - Check `success` field in responses
+
+6. **Cache results when appropriate** - Security data doesn't change frequently
+
+7. **Monitor risk levels** - Set up alerts for high-risk tokens in portfolios
+
+8. **Read error messages carefully** - They often contain guidance on the correct action to use
 
 ## Rate Limits
 

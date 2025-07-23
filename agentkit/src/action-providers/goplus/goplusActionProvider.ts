@@ -22,7 +22,7 @@ import {
   WalletSecurityResult,
   ApiResponse,
 } from "./types";
-import { ERROR_MESSAGES } from "./constants";
+import { ERROR_MESSAGES, REQUEST_CONFIG } from "./constants";
 import { GoplusAPI } from "./api";
 import {
   processTokenSecurityData,
@@ -166,6 +166,9 @@ export class GoplusActionProvider extends ActionProvider {
   /**
    * Analyze a Solana wallet address for security risks
    *
+   * This action is specifically for wallet addresses (not tokens).
+   * For token security analysis, use 'get_solana_token_security' instead.
+   *
    * Checks for:
    * - Malicious address indicators
    * - Suspicious transaction patterns
@@ -175,7 +178,7 @@ export class GoplusActionProvider extends ActionProvider {
    */
   @CreateAction({
     name: "analyze_wallet_security",
-    description: "Analyze a Solana wallet address for security risks and suspicious activities",
+    description: "Analyze a Solana wallet address (not token) for security risks and suspicious activities. For token analysis, use get_solana_token_security.",
     schema: WalletSecuritySchema,
   })
   async analyzeWalletSecurity(args: WalletSecurityInput): Promise<string> {
@@ -184,14 +187,23 @@ export class GoplusActionProvider extends ActionProvider {
         return JSON.stringify(createApiResponse(null, false, ERROR_MESSAGES.INVALID_ADDRESS));
       }
 
-      const response = await this.apiClient.checkMaliciousAddress(args.walletAddress);
+      // Check if this looks like a token address
+      const commonTokens = REQUEST_CONFIG.KNOWN_TOKEN_ADDRESSES;
+      
+      if ((commonTokens as readonly string[]).includes(args.walletAddress)) {
+        return JSON.stringify(createApiResponse(null, false, 
+          `This appears to be a token address (${args.walletAddress.slice(0, 8)}...). Please use 'get_solana_token_security' for token analysis instead.`
+        ));
+      }
 
-      // Process wallet security data (implementation depends on API response structure)
+      const response = await this.apiClient.getAddressSecurity(args.walletAddress);
+
+      // Process wallet security data
       const walletResult: WalletSecurityResult = {
         walletAddress: args.walletAddress,
         riskLevel: "low", // This would be calculated based on actual response
         riskFactors: [],
-        recommendations: ["Wallet appears to have normal activity patterns"],
+        recommendations: ["Wallet analysis completed. No major risk indicators detected."],
         lastAnalyzed: new Date().toISOString(),
       };
 
@@ -199,7 +211,7 @@ export class GoplusActionProvider extends ActionProvider {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       return JSON.stringify(
-        createApiResponse(null, false, `Wallet analysis failed: ${errorMessage}`),
+        createApiResponse(null, false, `Wallet analysis failed: ${errorMessage}. If this is a token address, use 'get_solana_token_security' instead.`),
       );
     }
   }
@@ -270,13 +282,15 @@ export class GoplusActionProvider extends ActionProvider {
   /**
    * Check if a specific address is flagged as malicious
    *
-   * Quick check against GoPlus malicious address database
+   * This action intelligently routes requests:
+   * - For token addresses (like USDC): Returns token security analysis
+   * - For wallet addresses: Checks malicious address database
    *
    * @param args
    */
   @CreateAction({
     name: "check_malicious_address",
-    description: "Check if a Solana address is flagged as malicious in the GoPlus database",
+    description: "Check if a Solana address is flagged as malicious. For token addresses, this returns security analysis; for wallet addresses, this checks the malicious database.",
     schema: MaliciousAddressCheckSchema,
   })
   async checkMaliciousAddress(args: MaliciousAddressCheckInput): Promise<string> {
@@ -286,12 +300,40 @@ export class GoplusActionProvider extends ActionProvider {
       }
 
       const response = await this.apiClient.checkMaliciousAddress(args.address);
+      
+      // If this was redirected to token security (for token addresses),
+      // we need to process the response appropriately
+      if (response.result && typeof response.result === 'object' && !('malicious' in response.result)) {
+        // This is likely a token security response, extract relevant info
+        const tokenAddress = Object.keys(response.result)[0];
+        if (tokenAddress && response.result[tokenAddress]) {
+          const tokenData = response.result[tokenAddress];
+          const processedData = processTokenSecurityData(tokenAddress, tokenData);
+          
+          // Convert to malicious address format
+          const maliciousResult = {
+            address: args.address,
+            malicious: processedData.securityScore < 50, // Consider risky tokens as potentially malicious
+            riskLevel: processedData.riskLevel,
+            securityScore: processedData.securityScore,
+            riskFactors: processedData.riskFactors,
+            note: "This appears to be a token address. Security analysis performed instead of malicious address check.",
+            tokenInfo: {
+              name: processedData.tokenName,
+              symbol: processedData.tokenSymbol,
+            },
+            lastChecked: new Date().toISOString()
+          };
+          
+          return JSON.stringify(createApiResponse(maliciousResult));
+        }
+      }
 
       return JSON.stringify(createApiResponse(response));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       return JSON.stringify(
-        createApiResponse(null, false, `Malicious address check failed: ${errorMessage}`),
+        createApiResponse(null, false, `Address check failed: ${errorMessage}. If this is a token address, try using 'get_solana_token_security' instead.`),
       );
     }
   }

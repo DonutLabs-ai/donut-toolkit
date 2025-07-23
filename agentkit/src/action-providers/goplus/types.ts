@@ -31,6 +31,14 @@ export interface SolanaTokenSecurityData {
   holder_count?: string;
   total_supply?: string;
 
+  // Metadata (actual API response structure)
+  metadata?: {
+    name?: string;
+    symbol?: string;
+    description?: string;
+    uri?: string;
+  };
+
   // Security indicators (0, 1, or null)
   is_true_token?: string;
   is_airdrop_scam?: string;

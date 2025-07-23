@@ -207,6 +207,11 @@ export function processTokenSecurityData(
   const warnings = generateWarnings(data);
   const recommendations = generateRecommendations(data, score);
 
+  const tokenName = data.token_name || (data as any).metadata?.name;
+  const tokenSymbol = data.token_symbol || (data as any).metadata?.symbol;
+  const holderCount = data.holder_count;
+  const totalSupply = data.total_supply;
+
   const liquidityInfo = data.dex
     ? {
         totalLiquidity: data.dex.reduce((sum, dex) => sum + parseFloat(dex.liquidity || "0"), 0),
@@ -220,8 +225,8 @@ export function processTokenSecurityData(
 
   return {
     tokenAddress,
-    tokenName: data.token_name,
-    tokenSymbol: data.token_symbol,
+    tokenName,
+    tokenSymbol,
     securityScore: score,
     riskLevel,
     riskFactors,
@@ -233,8 +238,8 @@ export function processTokenSecurityData(
     canBuy: data.cannot_buy !== "1",
     canSellAll: data.cannot_sell_all !== "1",
     liquidityInfo,
-    holderCount: data.holder_count ? parseInt(data.holder_count) : undefined,
-    totalSupply: data.total_supply,
+    holderCount: holderCount ? parseInt(holderCount) : undefined,
+    totalSupply,
     note: data.note,
     lastAnalyzed: new Date().toISOString(),
   };
