@@ -16,7 +16,6 @@ COPY turbo.json tsconfig.base.json ./
 # 复制所有包的 package.json 文件
 COPY agentkit/package.json ./agentkit/
 COPY server/package.json ./server/
-COPY create-onchain-agent/package.json ./create-onchain-agent/
 
 # 安装依赖
 RUN pnpm install --frozen-lockfile
@@ -44,7 +43,6 @@ COPY turbo.json ./
 # 复制各个包的 package.json
 COPY agentkit/package.json ./agentkit/
 COPY server/package.json ./server/
-COPY create-onchain-agent/package.json ./create-onchain-agent/
 
 # 安装生产依赖
 RUN pnpm install --frozen-lockfile --prod
@@ -52,12 +50,10 @@ RUN pnpm install --frozen-lockfile --prod
 # 从构建阶段复制构建产物
 COPY --from=builder /app/agentkit/dist ./agentkit/dist/
 COPY --from=builder /app/server/dist ./server/dist/
-COPY --from=builder /app/create-onchain-agent/dist ./create-onchain-agent/dist/
 
 # 复制必要的配置文件
 COPY server/mcp-server.js ./server/
 COPY server/claude_desktop_config.json ./server/
-COPY create-onchain-agent/templates ./create-onchain-agent/templates/
 
 # 创建非 root 用户
 RUN addgroup -g 1001 -S agentkit && \
@@ -90,7 +86,6 @@ COPY turbo.json tsconfig.base.json ./
 # 复制各个包的配置文件
 COPY agentkit/package.json agentkit/tsconfig.json ./agentkit/
 COPY server/package.json server/tsconfig.json ./server/
-COPY create-onchain-agent/package.json create-onchain-agent/tsconfig.build.json create-onchain-agent/tsconfig.json ./create-onchain-agent/
 
 # 安装所有依赖（包括开发依赖）
 RUN pnpm install --frozen-lockfile

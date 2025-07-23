@@ -11,7 +11,7 @@ import { z } from "zod";
  * Example action schema demonstrating various field types and validations.
  * Replace or modify this with your actual action schemas.
  */
-export const ExampleActionSchema = z.object({
+export const SanctumExampleActionSchema = z.object({
   /**
    * A descriptive name for the field
    */

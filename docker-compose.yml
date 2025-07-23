@@ -34,7 +34,6 @@ services:
       # 挂载源代码目录以支持热重载
       - ./agentkit/src:/app/agentkit/src
       - ./server/src:/app/server/src
-      - ./create-onchain-agent/src:/app/create-onchain-agent/src
       # 挂载配置文件
       - ./config:/app/config:ro
     stdin_open: true
@@ -43,7 +42,7 @@ services:
     profiles:
       - development
 
-  # CLI 工具容器 - 用于运行 create-onchain-agent
+  # CLI 工具容器 - 用于运行 MCP 工具
   agentkit-cli:
     build:
       context: .
@@ -56,7 +55,7 @@ services:
       # 挂载配置
       - ./config:/app/config:ro
     working_dir: /app
-    entrypoint: ["node", "create-onchain-agent/dist/esm/create.js"]
+    entrypoint: ["node", "server/mcp-server.js"]
     profiles:
       - cli
 

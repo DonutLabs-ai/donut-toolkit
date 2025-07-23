@@ -3,7 +3,7 @@
  */
 
 import { SolayerActionProvider } from "./solayerActionProvider";
-import { ExampleActionSchema } from "./schemas";
+import { SolayerExampleActionSchema } from "./schemas";
 import { SvmWalletProvider } from "../../wallet-providers";
 
 describe("Example Action", () => {
@@ -32,7 +32,7 @@ describe("Example Action", () => {
         fieldName: "test",
         amount: "1.0",
       };
-      const parseResult = ExampleActionSchema.safeParse(validInput);
+      const parseResult = SolayerExampleActionSchema.safeParse(validInput);
       expect(parseResult.success).toBe(true);
       if (parseResult.success) {
         expect(parseResult.data.fieldName).toBe("test");
@@ -45,7 +45,7 @@ describe("Example Action", () => {
         fieldName: "",
         amount: "invalid",
       };
-      const parseResult = ExampleActionSchema.safeParse(invalidInput);
+      const parseResult = SolayerExampleActionSchema.safeParse(invalidInput);
       expect(parseResult.success).toBe(false);
     });
   });

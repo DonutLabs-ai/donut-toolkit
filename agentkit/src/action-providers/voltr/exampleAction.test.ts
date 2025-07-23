@@ -3,7 +3,7 @@
  */
 
 import { VoltrActionProvider } from "./voltrActionProvider";
-import { ExampleActionSchema } from "./schemas";
+import { VoltrExampleActionSchema } from "./schemas";
 import { SvmWalletProvider } from "../../wallet-providers";
 
 describe("Example Action", () => {
@@ -32,7 +32,7 @@ describe("Example Action", () => {
         fieldName: "test",
         amount: "1.0",
       };
-      const parseResult = ExampleActionSchema.safeParse(validInput);
+      const parseResult = VoltrExampleActionSchema.safeParse(validInput);
       expect(parseResult.success).toBe(true);
       if (parseResult.success) {
         expect(parseResult.data.fieldName).toBe("test");
@@ -45,7 +45,7 @@ describe("Example Action", () => {
         fieldName: "",
         amount: "invalid",
       };
-      const parseResult = ExampleActionSchema.safeParse(invalidInput);
+      const parseResult = VoltrExampleActionSchema.safeParse(invalidInput);
       expect(parseResult.success).toBe(false);
     });
   });

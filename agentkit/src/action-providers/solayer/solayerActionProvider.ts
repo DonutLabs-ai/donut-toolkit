@@ -12,7 +12,7 @@ import { ActionProvider } from "../actionProvider";
 import { Network } from "../../network";
 import { CreateAction } from "../actionDecorator";
 import { SvmWalletProvider } from "../../wallet-providers";
-import { ExampleActionSchema } from "./schemas";
+import { SolayerExampleActionSchema } from "./schemas";
 
 /**
  * SolayerActionProvider provides actions for solayer operations.
@@ -38,7 +38,7 @@ export class SolayerActionProvider extends ActionProvider<SvmWalletProvider> {
    * Replace it with your actual implementation.
    *
    * @param walletProvider - The wallet provider instance for blockchain interactions
-   * @param args - Arguments defined by ExampleActionSchema
+   * @param args - Arguments defined by SolayerExampleActionSchema
    * @returns A promise that resolves to a string describing the action result
    */
   @CreateAction({
@@ -55,11 +55,11 @@ export class SolayerActionProvider extends ActionProvider<SvmWalletProvider> {
     - Expected outputs
     - Any important considerations or limitations
   `,
-    schema: ExampleActionSchema,
+    schema: SolayerExampleActionSchema,
   })
   async exampleAction(
     walletProvider: SvmWalletProvider,
-    args: z.infer<typeof ExampleActionSchema>,
+    args: z.infer<typeof SolayerExampleActionSchema>,
   ): Promise<string> {
     // TODO: Implement your action logic here
     // Example implementation:

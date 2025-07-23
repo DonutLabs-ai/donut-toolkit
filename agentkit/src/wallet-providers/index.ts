@@ -9,4 +9,3 @@ export * from "./legacyCdpWalletProvider";
 export * from "./svmWalletProvider";
 export * from "./legacyCdpSmartWalletProvider";
 export * from "./solanaKeypairWalletProvider";
-// Privy and ZeroDev wallet providers have been removed

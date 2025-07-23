@@ -71,7 +71,7 @@ export class JupiterActionProvider extends ActionProvider<SvmWalletProvider> {
           success: false,
           error: "Invalid input mint address",
           message: `Input mint address ${args.inputMint} is not a valid Solana address`,
-          debug: { inputMint: args.inputMint, length: args.inputMint.length }
+          debug: { inputMint: args.inputMint, length: args.inputMint ? args.inputMint.length : 0 }
         });
       }
 
@@ -80,7 +80,7 @@ export class JupiterActionProvider extends ActionProvider<SvmWalletProvider> {
           success: false,
           error: "Invalid output mint address",
           message: `Output mint address ${args.outputMint} is not a valid Solana address`,
-          debug: { outputMint: args.outputMint, length: args.outputMint.length }
+          debug: { outputMint: args.outputMint, length: args.outputMint ? args.outputMint.length : 0 }
         });
       }
 
@@ -219,7 +219,10 @@ export class JupiterActionProvider extends ActionProvider<SvmWalletProvider> {
         debug: { 
           errorMessage: String(error), 
           errorStack: error instanceof Error ? error.stack : undefined,
-          args 
+          inputMint: args.inputMint,
+          outputMint: args.outputMint,
+          amount: args.amount,
+          slippageBps: args.slippageBps
         }
       });
     }

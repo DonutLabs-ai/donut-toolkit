@@ -12,7 +12,7 @@ import { ActionProvider } from "../actionProvider";
 import { Network } from "../../network";
 import { CreateAction } from "../actionDecorator";
 import { SvmWalletProvider } from "../../wallet-providers";
-import { ExampleActionSchema } from "./schemas";
+import { DriftExampleActionSchema } from "./schemas";
 
 /**
  * DriftActionProvider provides actions for drift operations.
@@ -55,11 +55,11 @@ export class DriftActionProvider extends ActionProvider<SvmWalletProvider> {
     - Expected outputs
     - Any important considerations or limitations
   `,
-    schema: ExampleActionSchema,
+    schema: DriftExampleActionSchema,
   })
   async exampleAction(
     walletProvider: SvmWalletProvider,
-    args: z.infer<typeof ExampleActionSchema>,
+    args: z.infer<typeof DriftExampleActionSchema>,
   ): Promise<string> {
     // TODO: Implement your action logic here
     // Example implementation:
