@@ -52,7 +52,6 @@ describe("WormholeActionProvider", () => {
     });
   });
 
-
   describe("getTransferStatus", () => {
     it("should get transfer status", async () => {
       const mockStatus = {

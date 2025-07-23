@@ -1,0 +1,58 @@
+{
+  "name": "AgentKit Docker Configuration",
+  "version": "1.0.0",
+  "description": "Example configuration for AgentKit Docker deployment",
+  "mcp": {
+    "server": {
+      "port": 3000,
+      "host": "0.0.0.0",
+      "cors": {
+        "enabled": true,
+        "origins": ["http://localhost:3000", "http://localhost:3001"]
+      }
+    },
+    "tools": {
+      "enabled": [
+        "wallet",
+        "jupiter",
+        "goplus",
+        "dexscreener",
+        "defillama"
+      ]
+    }
+  },
+  "networks": {
+    "default": "testnet",
+    "supported": [
+      "mainnet",
+      "testnet",
+      "devnet"
+    ]
+  },
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "output": "console"
+  },
+  "security": {
+    "rateLimit": {
+      "enabled": true,
+      "windowMs": 60000,
+      "max": 100
+    },
+    "authentication": {
+      "required": false,
+      "type": "apikey"
+    }
+  },
+  "features": {
+    "analytics": {
+      "enabled": true,
+      "provider": "local"
+    },
+    "monitoring": {
+      "enabled": true,
+      "healthCheck": "/health"
+    }
+  }
+} 

@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # 生产环境 - MCP 服务器
+  agentkit-production:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: agentkit-mcp-server
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      # 挂载配置文件，允许运行时配置
+      - ./config:/app/config:ro
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # 开发环境
+  agentkit-development:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: agentkit-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      # 挂载源代码目录以支持热重载
+      - ./agentkit/src:/app/agentkit/src
+      - ./server/src:/app/server/src
+      - ./create-onchain-agent/src:/app/create-onchain-agent/src
+      # 挂载配置文件
+      - ./config:/app/config:ro
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    profiles:
+      - development
+
+  # CLI 工具容器 - 用于运行 create-onchain-agent
+  agentkit-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: agentkit-cli
+    volumes:
+      # 挂载输出目录
+      - ./output:/app/output
+      # 挂载配置
+      - ./config:/app/config:ro
+    working_dir: /app
+    entrypoint: ["node", "create-onchain-agent/dist/esm/create.js"]
+    profiles:
+      - cli
+
+# 共享网络
+networks:
+  default:
+    name: agentkit-network 

@@ -39,7 +39,9 @@ jspm_packages/
 
 # Optional npm cache directory
 .npm
-
+.claude
+.changeset
+todos.md
 # Turbo cache directory
 .turbo/
 

@@ -20,4 +20,3 @@ const BaseHttpRequestSchema = z.object({
 export const HttpRequestSchema = BaseHttpRequestSchema.strip().describe(
   "Instructions for making a basic HTTP request",
 );
-

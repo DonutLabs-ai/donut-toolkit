@@ -17,40 +17,27 @@ const {
   SolanaKeypairWalletProvider,
   
   // Action providers that don't need wallet
-  DefiLlamaActionProvider,
   defillamaActionProvider, 
   DexScreenerActionProvider,
   dexscreenerActionProvider,
-  MessariActionProvider,
   messariActionProvider,
-  PythActionProvider,
   pythActionProvider,
-  AlloraActionProvider,
   alloraActionProvider,
-  GoplusActionProvider,
   createGoplusActionProvider,
   SNSActionProvider,
-  WalletActionProvider,
   walletActionProvider,
   WormholeActionProvider,
   
   // Action providers that need SvmWalletProvider
-  JupiterActionProvider,
   jupiterActionProvider,
-  PumpfunActionProvider,
   pumpfunActionProvider,
   MeteoraDLMMActionProvider,
-  MagicEdenActionProvider,
   magicEdenActionProvider,
-  SolanaNftActionProvider,
   solanaNftActionProvider,
-  SplActionProvider,
   splActionProvider,
   
   // Action providers that need EvmWalletProvider
-  X402ActionProvider,
   x402ActionProvider,
-  OnrampActionProvider,
   onrampActionProvider
 } = require("@coinbase/agentkit");
 const { zodToJsonSchema } = require("zod-to-json-schema");

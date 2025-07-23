@@ -178,7 +178,8 @@ export class GoplusActionProvider extends ActionProvider {
    */
   @CreateAction({
     name: "analyze_wallet_security",
-    description: "Analyze a Solana wallet address (not token) for security risks and suspicious activities. For token analysis, use get_solana_token_security.",
+    description:
+      "Analyze a Solana wallet address (not token) for security risks and suspicious activities. For token analysis, use get_solana_token_security.",
     schema: WalletSecuritySchema,
   })
   async analyzeWalletSecurity(args: WalletSecurityInput): Promise<string> {
@@ -189,11 +190,15 @@ export class GoplusActionProvider extends ActionProvider {
 
       // Check if this looks like a token address
       const commonTokens = REQUEST_CONFIG.KNOWN_TOKEN_ADDRESSES;
-      
+
       if ((commonTokens as readonly string[]).includes(args.walletAddress)) {
-        return JSON.stringify(createApiResponse(null, false, 
-          `This appears to be a token address (${args.walletAddress.slice(0, 8)}...). Please use 'get_solana_token_security' for token analysis instead.`
-        ));
+        return JSON.stringify(
+          createApiResponse(
+            null,
+            false,
+            `This appears to be a token address (${args.walletAddress.slice(0, 8)}...). Please use 'get_solana_token_security' for token analysis instead.`,
+          ),
+        );
       }
 
       const response = await this.apiClient.getAddressSecurity(args.walletAddress);
@@ -211,7 +216,11 @@ export class GoplusActionProvider extends ActionProvider {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       return JSON.stringify(
-        createApiResponse(null, false, `Wallet analysis failed: ${errorMessage}. If this is a token address, use 'get_solana_token_security' instead.`),
+        createApiResponse(
+          null,
+          false,
+          `Wallet analysis failed: ${errorMessage}. If this is a token address, use 'get_solana_token_security' instead.`,
+        ),
       );
     }
   }
@@ -290,7 +299,8 @@ export class GoplusActionProvider extends ActionProvider {
    */
   @CreateAction({
     name: "check_malicious_address",
-    description: "Check if a Solana address is flagged as malicious. For token addresses, this returns security analysis; for wallet addresses, this checks the malicious database.",
+    description:
+      "Check if a Solana address is flagged as malicious. For token addresses, this returns security analysis; for wallet addresses, this checks the malicious database.",
     schema: MaliciousAddressCheckSchema,
   })
   async checkMaliciousAddress(args: MaliciousAddressCheckInput): Promise<string> {
@@ -300,16 +310,20 @@ export class GoplusActionProvider extends ActionProvider {
       }
 
       const response = await this.apiClient.checkMaliciousAddress(args.address);
-      
+
       // If this was redirected to token security (for token addresses),
       // we need to process the response appropriately
-      if (response.result && typeof response.result === 'object' && !('malicious' in response.result)) {
+      if (
+        response.result &&
+        typeof response.result === "object" &&
+        !("malicious" in response.result)
+      ) {
         // This is likely a token security response, extract relevant info
         const tokenAddress = Object.keys(response.result)[0];
         if (tokenAddress && response.result[tokenAddress]) {
           const tokenData = response.result[tokenAddress];
           const processedData = processTokenSecurityData(tokenAddress, tokenData);
-          
+
           // Convert to malicious address format
           const maliciousResult = {
             address: args.address,
@@ -322,9 +336,9 @@ export class GoplusActionProvider extends ActionProvider {
               name: processedData.tokenName,
               symbol: processedData.tokenSymbol,
             },
-            lastChecked: new Date().toISOString()
+            lastChecked: new Date().toISOString(),
           };
-          
+
           return JSON.stringify(createApiResponse(maliciousResult));
         }
       }
@@ -333,7 +347,11 @@ export class GoplusActionProvider extends ActionProvider {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       return JSON.stringify(
-        createApiResponse(null, false, `Address check failed: ${errorMessage}. If this is a token address, try using 'get_solana_token_security' instead.`),
+        createApiResponse(
+          null,
+          false,
+          `Address check failed: ${errorMessage}. If this is a token address, try using 'get_solana_token_security' instead.`,
+        ),
       );
     }
   }

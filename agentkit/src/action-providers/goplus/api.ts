@@ -48,37 +48,41 @@ export class GoplusAPI {
     // For Solana token addresses (typically used for tokens), use token security endpoint
     // Token addresses are usually longer and have specific characteristics
     const isLikelyTokenAddress = this.isLikelyTokenAddress(address);
-    
+
     if (isLikelyTokenAddress) {
       if (this.enableLogging) {
-        console.log(`[GoPlus API] Treating ${address} as token address, using token security endpoint`);
+        console.log(
+          `[GoPlus API] Treating ${address} as token address, using token security endpoint`,
+        );
       }
       // Use token security endpoint for token addresses
       return this.solanaTokenSecurity(address);
     }
-    
+
     // For wallet addresses, try the malicious address endpoint
     const url = `${this.baseURL}${ENDPOINTS.MALICIOUS_ADDRESS}?address=${encodeURIComponent(address)}`;
-    
+
     try {
       return await this.makeRequest(url);
     } catch (error) {
       if (this.enableLogging) {
-        console.log(`[GoPlus API] Malicious address endpoint failed for ${address}, this may be expected for some address types`);
+        console.log(
+          `[GoPlus API] Malicious address endpoint failed for ${address}, this may be expected for some address types`,
+        );
       }
-      
+
       // If malicious address endpoint fails, return a safe default response
-      if (error instanceof Error && error.message.includes('404')) {
+      if (error instanceof Error && error.message.includes("404")) {
         return {
           code: 200,
           message: "OK",
           result: {
             malicious: false,
-            note: "Malicious address check not available for this address type. No malicious activity detected in available databases."
-          }
+            note: "Malicious address check not available for this address type. No malicious activity detected in available databases.",
+          },
         };
       }
-      
+
       throw error;
     }
   }
@@ -97,22 +101,24 @@ export class GoplusAPI {
       }
       return this.solanaTokenSecurity(address);
     }
-    
+
     // For wallet addresses, try the address security endpoint
     const url = `${this.baseURL}${ENDPOINTS.ADDRESS_SECURITY}?address=${encodeURIComponent(address)}`;
-    
+
     try {
       return await this.makeRequest(url);
     } catch (error) {
       if (this.enableLogging) {
-        console.log(`[GoPlus API] Address security endpoint failed for ${address}, trying malicious address endpoint as fallback`);
+        console.log(
+          `[GoPlus API] Address security endpoint failed for ${address}, trying malicious address endpoint as fallback`,
+        );
       }
-      
+
       // Fallback to malicious address check
-      if (error instanceof Error && error.message.includes('404')) {
+      if (error instanceof Error && error.message.includes("404")) {
         return this.checkMaliciousAddress(address);
       }
-      
+
       throw error;
     }
   }
@@ -220,7 +226,7 @@ export class GoplusAPI {
     if ((REQUEST_CONFIG.KNOWN_TOKEN_ADDRESSES as readonly string[]).includes(address)) {
       return true;
     }
-    
+
     // Additional heuristics could be added here
     // For now, we'll default to treating unknown addresses as wallet addresses
     // unless they match known token patterns

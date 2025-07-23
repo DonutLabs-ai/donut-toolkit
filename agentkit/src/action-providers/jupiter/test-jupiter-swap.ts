@@ -28,7 +28,7 @@ async function testJupiterSwap() {
     const outputMint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"; // USDC
     const amount = 0.001 * 1e9; // 0.001 SOL (以 lamports 为单位)
     const slippageBps = 50; // 0.5% 滑点
-    const userPublicKey = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"; // 测试用的公钥
+    const userPublicKey = "5pVyoAeURQHNMVU7DmfMHvCDNmTEYXWfEwc136GYhTKG"; // MCP server 使用的公钥
 
     console.log("📋 Swap 参数:");
     console.log(`  输入代币: ${inputMint} (SOL)`);

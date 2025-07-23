@@ -25,7 +25,6 @@ export class WormholeActionProvider extends ActionProvider {
     this.api = new WormholeAPI();
   }
 
-
   /**
    * Get the status of a cross-chain transfer.
    *
