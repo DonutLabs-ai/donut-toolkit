@@ -224,8 +224,245 @@ const security = await securityAction?.invoke({
 # 启动 MCP 服务器
 node server/mcp-server.js
 
-# 服务器将在 http://localhost:3000 启动
+# MCP 服务器通过 stdio 协议与 AI 工具通信
 ```
+
+## 🤖 Docker 环境下的 MCP 服务器配置
+
+### 🚀 快速启动
+
+```bash
+# 1. 克隆项目
+git clone <repository-url>
+cd donut-toolkits
+
+# 2. 启动 Docker MCP 服务器
+./scripts/docker-start.sh dev
+```
+
+### 📋 配置步骤
+
+#### 1. 环境配置
+
+```bash
+
+cp env.example .env
+
+# 编辑配置文件
+nano .env
+```
+
+#### 2. 启动 MCP 服务器
+
+```bash
+# 开发环境（推荐）
+./scripts/docker-start.sh dev
+
+# 生产环境
+./scripts/docker-start.sh prod
+
+# 测试环境
+./scripts/docker-start.sh test
+```
+
+#### 3. 验证服务器状态
+
+```bash
+# 查看容器状态
+./scripts/docker-start.sh status
+
+# 查看服务器日志
+./scripts/docker-start.sh logs agentkit-dev
+
+# 进入容器检查
+./scripts/docker-start.sh shell agentkit-dev
+```
+
+### 🔗 连接 Claude Desktop
+
+#### 方式一：直接使用 Docker 容器
+
+```json
+{
+  "mcpServers": {
+    "agentkit": {
+      "command": "docker",
+      "args": [
+        "exec", "-i", "agentkit-dev", 
+        "node", "/app/server/mcp-server.js"
+      ]
+    }
+  }
+}
+```
+
+#### 方式二：本地映射配置
+
+1. **复制 MCP 配置文件到本地：**
+
+```bash
+# 从容器复制配置文件
+docker cp agentkit-dev:/app/server/claude_desktop_config.json ./claude_desktop_config.json
+```
+
+2. **在 Claude Desktop 中配置：**
+
+```json
+{
+  "mcpServers": {
+    "agentkit": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i", 
+        "--env-file", ".env",
+        "-v", "$(pwd)/config:/app/config:ro",
+        "-v", "$(pwd)/output:/app/output",
+        "agentkit-prod",
+        "node", "/app/server/mcp-server.js"
+      ]
+    }
+  }
+}
+```
+
+### 🧪 测试 MCP 连接
+
+#### 1. 使用内置测试
+
+```bash
+# 启动测试环境
+./scripts/docker-start.sh test
+
+# 查看测试结果
+./scripts/docker-start.sh logs agentkit-mcp-test
+```
+
+#### 2. 手动测试连接
+
+```bash
+# 进入容器测试
+docker exec -it agentkit-dev bash
+cd /app/server
+
+# 运行 MCP 服务器（stdio 模式）
+echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}}}' | node mcp-server.js
+```
+
+
+```
+
+### 🔧 故障排除
+
+#### 常见问题
+
+**1. 容器启动失败**
+```bash
+# 检查 .env 文件
+cat .env
+
+# 重新构建镜像
+./scripts/docker-start.sh build
+
+# 查看错误日志
+./scripts/docker-start.sh logs agentkit-dev
+```
+
+**2. MCP 连接失败**
+```bash
+# 检查容器是否运行
+docker ps | grep agentkit
+
+# 测试容器内部连接
+docker exec agentkit-dev node --version
+docker exec agentkit-dev ls -la /app/server/
+```
+
+**3. 环境变量问题**
+```bash
+# 在容器内检查环境变量
+docker exec agentkit-dev env | grep -E "(NODE_ENV|SOLANA|MCP)"
+
+# 重新创建 .env 文件
+rm .env
+./scripts/docker-start.sh dev
+```
+
+**4. 磁盘空间不足 (ENOSPC)**
+```bash
+# 检查磁盘和 Docker 空间使用情况
+./scripts/docker-start.sh space
+
+# 深度清理 Docker 资源（释放最多空间）
+./scripts/docker-start.sh prune
+
+# 手动清理系统（如果需要）
+docker system prune -a --volumes -f
+docker builder prune -a -f
+
+# 检查系统磁盘空间
+df -h
+
+# 清理 npm/pnpm 缓存
+npm cache clean --force
+pnpm store prune
+```
+
+**5. Docker 构建缓慢或失败**
+```bash
+# 使用构建缓存加速
+./scripts/docker-start.sh build
+
+# 如果构建仍然失败，清理后重试
+./scripts/docker-start.sh prune
+./scripts/docker-start.sh build
+
+# 检查 Docker 设置
+docker info | grep -E "(Storage Driver|Docker Root Dir)"
+```
+
+#### 调试模式
+
+```bash
+# 启用详细日志
+export DEBUG=agentkit:*
+./scripts/docker-start.sh dev
+
+# 查看详细日志
+./scripts/docker-start.sh logs agentkit-dev
+```
+
+### 🔐 安全配置
+
+#### 生产环境建议
+
+```bash
+# 使用生产配置
+NODE_ENV=production
+LOG_LEVEL=warn
+
+# 限制容器权限
+docker run --user 1000:1000 --read-only --tmpfs /tmp ...
+
+# 使用密钥管理
+export SOLANA_PRIVATE_KEY=$(vault kv get -field=private_key secret/solana)
+```
+
+#### 网络配置
+
+```bash
+# 自定义网络（可选）
+docker network create agentkit-network
+
+# 运行在自定义网络
+docker run --network agentkit-network ...
+```
+
+### 📚 相关文档
+
+- [Docker 部署指南](./DOCKER.md)
+- [环境配置指南](./ENVIRONMENT_SETUP.md)
+- [MCP 服务器详细说明](./server/README.md)
+- [Claude Desktop 配置](./server/claude_desktop_config.json)
 
 ## 🔧 开发指南
 
@@ -396,86 +633,3 @@ console.log(provider.getActions(null).map(a => a.name));
 # 检查环境变量
 printenv | grep -E "(SOLANA|NODE_ENV)"
 ```
-
-## 🤝 贡献指南
-
-我们欢迎社区贡献！请遵循以下步骤：
-
-### 贡献流程
-
-1. **Fork 项目**
-   ```bash
-   git clone https://github.com/your-username/donut-toolkits.git
-   cd donut-toolkits
-   ```
-
-2. **创建功能分支**
-   ```bash
-   git checkout -b feature/new-action-provider
-   ```
-
-3. **开发和测试**
-   ```bash
-   # 安装依赖
-   pnpm install
-   
-   # 运行测试
-   pnpm test
-   
-   # 检查代码格式
-   pnpm run lint
-   ```
-
-4. **提交更改**
-   ```bash
-   git add .
-   git commit -m "feat: add new action provider for XYZ protocol"
-   ```
-
-5. **推送并创建 PR**
-   ```bash
-   git push origin feature/new-action-provider
-   ```
-
-### 代码规范
-
-- 使用 TypeScript 编写代码
-- 遵循 ESLint 和 Prettier 配置
-- 为新功能添加测试
-- 更新相关文档
-
-### 添加新的 Action Provider
-
-1. 在 `agentkit/src/action-providers/` 中创建新目录
-2. 实现 ActionProvider 类
-3. 添加 schemas.ts 和测试文件
-4. 更新 index.ts 导出
-5. 添加 README.md 文档
-
-## 📚 文档资源
-
-- [Action Providers 文档](./agentkit/src/action-providers/README.md)
-- [Docker 部署指南](./DOCKER.md)
-- [Coinbase AgentKit 官方文档](https://github.com/coinbase/agentkit)
-- [Model Context Protocol 规范](https://modelcontextprotocol.io/)
-
-## 📄 许可证
-
-本项目采用 Apache-2.0 许可证 - 详见 [LICENSE](LICENSE) 文件。
-
-## 🆘 获取帮助
-
-如果遇到问题或需要帮助：
-
-1. 查看 [故障排除](#-故障排除) 部分
-2. 搜索现有的 [GitHub Issues](https://github.com/your-repo/issues)
-3. 创建新的 Issue 描述您的问题
-4. 加入我们的社区讨论
-
-## ⭐ 支持项目
-
-如果这个项目对您有帮助，请给我们一个 ⭐️！
-
----
-
-**注意**: 本项目仍在活跃开发中，API 可能会发生变化。请定期检查更新并查看 changelog。

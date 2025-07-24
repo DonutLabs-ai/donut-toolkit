@@ -6,56 +6,128 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: agentkit-mcp-server
-    ports:
-      - "3000:3000"
+    # MCP 服务器通过 stdio 通信，不需要 HTTP 端口
+    # ports:
+    #   - "3000:3000"
     environment:
       - NODE_ENV=production
+      - MCP_SERVER_PORT=3000
     volumes:
       # 挂载配置文件，允许运行时配置
       - ./config:/app/config:ro
+      # 挂载输出目录
+      - ./output:/app/output
+      # 挂载日志目录（可选）
+      - ./logs:/tmp:rw
+    stdin_open: true
+    tty: true
     restart: unless-stopped
     profiles:
       - production
 
-  # 开发环境
+  # 开发环境 - MCP 服务器开发模式
   agentkit-development:
     build:
       context: .
       dockerfile: Dockerfile
       target: development
     container_name: agentkit-dev
-    ports:
-      - "3000:3000"
+    # MCP 服务器通过 stdio 通信，不需要 HTTP 端口
+    # ports:
+    #   - "3000:3000"
     environment:
       - NODE_ENV=development
+      - MCP_SERVER_PORT=3000
+      - DEBUG=agentkit:*
     volumes:
       # 挂载源代码目录以支持热重载
       - ./agentkit/src:/app/agentkit/src
       - ./server/src:/app/server/src
       # 挂载配置文件
       - ./config:/app/config:ro
+      # 挂载输出目录
+      - ./output:/app/output
+      # 挂载日志目录
+      - ./logs:/tmp:rw
     stdin_open: true
     tty: true
     restart: unless-stopped
     profiles:
       - development
 
-  # CLI 工具容器 - 用于运行 MCP 工具
-  agentkit-cli:
+  # MCP 测试环境 - 用于测试 MCP 连接
+  agentkit-mcp-test:
     build:
       context: .
       dockerfile: Dockerfile
       target: production
-    container_name: agentkit-cli
+    container_name: agentkit-mcp-test
+    environment:
+      - NODE_ENV=test
     volumes:
-      # 挂载输出目录
-      - ./output:/app/output
-      # 挂载配置
       - ./config:/app/config:ro
+      - ./output:/app/output
+      - ./logs:/tmp:rw
     working_dir: /app
+    stdin_open: true
+    tty: true
+    # 用于一次性测试，不自动重启
+    restart: "no"
     entrypoint: ["node", "server/mcp-server.js"]
     profiles:
-      - cli
+      - test
+
+  # HTTP 演示服务器（可选）- 仅用于健康检查和演示
+  agentkit-http-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: agentkit-http-demo
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - MCP_SERVER_PORT=3000
+    volumes:
+      - ./config:/app/config:ro
+      - ./output:/app/output
+    # 运行一个简单的 HTTP 服务器用于演示
+    command: >
+      sh -c "
+        echo '#!/usr/bin/env node
+        const express = require(\"express\");
+        const app = express();
+        const PORT = process.env.MCP_SERVER_PORT || 3000;
+        
+        app.use(express.json());
+        
+        app.get(\"/health\", (req, res) => {
+          res.json({
+            status: \"healthy\",
+            service: \"agentkit-mcp-demo\",
+            timestamp: new Date().toISOString(),
+            note: \"This is a demo HTTP wrapper. Real MCP server uses stdio.\"
+          });
+        });
+        
+        app.get(\"/\", (req, res) => {
+          res.json({
+            name: \"AgentKit MCP Server Demo\",
+            description: \"HTTP demo for AgentKit MCP Server\",
+            note: \"Real MCP server communicates via stdio with Claude Desktop\",
+            endpoints: {\"/health\": \"Health check\", \"/\": \"This info\"}
+          });
+        });
+        
+        app.listen(PORT, \"0.0.0.0\", () => {
+          console.log(`Demo HTTP server running on port ${PORT}`);
+          console.log(\"Note: This is just a demo. Real MCP server uses stdio.\");
+        });' > /tmp/http-demo.js && node /tmp/http-demo.js
+      "
+    restart: unless-stopped
+    profiles:
+      - demo
 
 # 共享网络
 networks:
