@@ -2,12 +2,15 @@
 
 /**
  * Complete AgentKit MCP Server with ALL available Action Providers
- * Integrated MCP Server starter for AgentKit
+ * HTTP Streaming MCP Server for AgentKit
  */
 
-const { Server } = require("@modelcontextprotocol/sdk/server/index.js");
-const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
-const { CallToolRequestSchema, ListToolsRequestSchema } = require("@modelcontextprotocol/sdk/types.js");
+const express = require("express");
+const cors = require("cors");
+const { randomUUID } = require("node:crypto");
+const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
+const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
+const { isInitializeRequest } = require("@modelcontextprotocol/sdk/types.js");
 const path = require("path");
 const fs = require("fs");
 
@@ -126,7 +129,27 @@ class ReadonlySvmWalletProvider {
 }
 
 // Setup logging
-const LOG_FILE = "/tmp/agentkit-mcp.log";
+const LOG_FILE = "/tmp/agentkit-mcp-http.log";
+
+/**
+ * Enhanced logging function
+ */
+function log(message, isError = false) {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}`;
+  
+  if (isError) {
+    console.error(logMessage);
+  } else {
+    console.error(logMessage);
+  }
+  
+  try {
+    fs.appendFileSync(LOG_FILE, logMessage + "\n");
+  } catch (err) {
+    // Ignore file logging errors
+  }
+}
 
 /**
  * Create a minimal wallet provider for unsigned transaction generation
@@ -169,26 +192,6 @@ function createDummyWalletProvider() {
 }
 
 /**
- * Enhanced logging function
- */
-function log(message, isError = false) {
-  const timestamp = new Date().toISOString();
-  const logMessage = `[${timestamp}] ${message}`;
-  
-  if (isError) {
-    console.error(logMessage);
-  } else {
-    console.error(logMessage);
-  }
-  
-  try {
-    fs.appendFileSync(LOG_FILE, logMessage + "\n");
-  } catch (err) {
-    // Ignore file logging errors
-  }
-}
-
-/**
  * Setup environment
  */
 function setupEnvironment() {
@@ -221,10 +224,10 @@ function setupEnvironment() {
 }
 
 /**
- * Create and configure the MCP server with ALL AgentKit actions
+ * Create AgentKit MCP Server instance
  */
-async function createAgentKitMcpServer() {
-  log("Starting Complete AgentKit MCP Server...");
+function createAgentKitServer() {
+  log("Creating AgentKit MCP Server...");
   
   // Create dummy wallet provider
   const dummyWallet = createDummyWalletProvider();
@@ -232,6 +235,21 @@ async function createAgentKitMcpServer() {
     log(`Created dummy wallet provider: ${dummyWallet.getAddress()}`);
   }
   
+  const server = new McpServer(
+    {
+      name: "agentkit-complete-http",
+      version: "0.2.0",
+    },
+    {
+      // Enable notification debouncing for better performance
+      debouncedNotificationMethods: [
+        'notifications/tools/list_changed',
+        'notifications/resources/list_changed',
+        'notifications/prompts/list_changed'
+      ]
+    }
+  );
+
   const providers = [];
   
   // Action providers that don't need wallet
@@ -376,19 +394,10 @@ async function createAgentKitMcpServer() {
     log(`✗ Failed to add X402ActionProvider: ${error.message}`, true);
   }
   
-  // Onramp - fiat on/off ramp
-  try {
-    // Skip onramp as it requires specific props
-    log("⚠ Skipped OnrampActionProvider (requires specific configuration)");
-  } catch (error) {
-    log(`✗ Failed to add OnrampActionProvider: ${error.message}`, true);
-  }
-  
   log(`Total providers loaded: ${providers.length}`);
   log(`Provider names: ${providers.map(p => p.constructor.name).join(", ")}`);
   
   // Collect actions from all providers
-  const actions = [];
   const svmWalletRequiredProviders = [
     'JupiterActionProvider',
     'PumpfunActionProvider', 
@@ -455,142 +464,285 @@ async function createAgentKitMcpServer() {
         return action;
       });
       
-      actions.push(...processedActions);
-      log(`✓ Added ${processedActions.length} actions from ${providerName} ${needsWallet ? '(with dummy wallet)' : '(direct)'}`);
+      // Register tools with the MCP server
+      for (const action of processedActions) {
+        try {
+          let inputSchema;
+          try {
+            inputSchema = action.schema ? zodToJsonSchema(action.schema) : {};
+          } catch (error) {
+            log(`Failed to convert schema for ${action.name}: ${error.message}`, true);
+            inputSchema = {};
+          }
+          
+          server.registerTool(
+            action.name,
+            {
+              title: action.name,
+              description: action.description,
+              inputSchema: inputSchema
+            },
+            async (args) => {
+              try {
+                log(`Executing tool: ${action.name}`);
+                
+                // 特殊处理 GoPlus actions - 添加详细调试
+                if (action.name.startsWith('GoplusActionProvider_')) {
+                  log(`[GoPlus Debug] Tool: ${action.name}`);
+                  log(`[GoPlus Debug] Arguments: ${JSON.stringify(args)}`);
+                  
+                  // 特别检查代币地址
+                  if (args && args.tokenAddress) {
+                    const addr = args.tokenAddress;
+                    log(`[GoPlus Debug] Token address: ${addr} (length: ${addr.length})`);
+                    
+                    // 验证 Solana 地址格式
+                    const isValidFormat = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(addr);
+                    log(`[GoPlus Debug] Address format valid: ${isValidFormat}`);
+                  }
+                }
+                
+                const result = await action.invoke(args || {});
+                
+                // 特殊处理 GoPlus 结果
+                if (action.name.startsWith('GoplusActionProvider_')) {
+                  const resultStr = typeof result === 'string' ? result : JSON.stringify(result);
+                  log(`[GoPlus Debug] Raw result length: ${resultStr.length}`);
+                  log(`[GoPlus Debug] Raw result preview: ${resultStr.substring(0, 200)}...`);
+                  
+                  // 尝试解析结果检查是否有错误
+                  try {
+                    const parsed = typeof result === 'string' ? JSON.parse(result) : result;
+                    if (parsed.success === false) {
+                      log(`[GoPlus Debug] API returned failure: ${parsed.error}`, true);
+                    } else if (parsed.success === true) {
+                      log(`[GoPlus Debug] API returned success with data`);
+                    }
+                  } catch (parseError) {
+                    log(`[GoPlus Debug] Failed to parse result: ${parseError.message}`, true);
+                  }
+                }
+                
+                log(`Tool ${action.name} executed successfully`);
+
+                return {
+                  content: [
+                    {
+                      type: "text",
+                      text: typeof result === 'string' ? result : safeJsonStringify(result),
+                    },
+                  ],
+                };
+              } catch (error) {
+                log(`Tool ${action.name} failed: ${error.message}`, true);
+                
+                if (action.name.startsWith('GoplusActionProvider_')) {
+                  log(`[GoPlus Debug] Error type: ${error.constructor.name}`, true);
+                  log(`[GoPlus Debug] Error stack: ${error.stack}`, true);
+                  
+                  // 检查常见错误类型
+                  if (error.message.includes('fetch')) {
+                    log(`[GoPlus Debug] Network error detected`, true);
+                  } else if (error.message.includes('timeout')) {
+                    log(`[GoPlus Debug] Timeout error detected`, true);
+                  } else if (error.message.includes('JSON')) {
+                    log(`[GoPlus Debug] JSON parsing error detected`, true);
+                  }
+                }
+                
+                throw new Error(`Tool ${action.name} failed: ${error.message}`);
+              }
+            }
+          );
+        } catch (error) {
+          log(`Failed to register tool ${action.name}: ${error.message}`, true);
+        }
+      }
+      
+      log(`✓ Added ${processedActions.length} tools from ${providerName} ${needsWallet ? '(with dummy wallet)' : '(direct)'}`);
     } catch (error) {
       log(`✗ Failed to get actions from ${provider.constructor.name}: ${error.message}`, true);
     }
   }
   
-  log(`Total actions available: ${actions.length}`);
-  
-  // Create MCP tools from actions
-  const tools = actions.map(action => {
-    let inputSchema;
-    try {
-      inputSchema = action.schema ? zodToJsonSchema(action.schema) : {
-        type: "object",
-        properties: {},
-        required: []
-      };
-    } catch (error) {
-      log(`Failed to convert schema for ${action.name}: ${error.message}`, true);
-      inputSchema = {
-        type: "object",
-        properties: {},
-        required: []
-      };
-    }
-    
-    return {
-      name: action.name,
-      description: action.description,
-      inputSchema
-    };
-  });
-  
-  log(`Available tools: ${tools.map(t => t.name).join(", ")}`);
-  
-  // Create MCP server
-  const server = new Server(
-    {
-      name: "agentkit-complete",
-      version: "0.2.0",
-    },
-    {
-      capabilities: {
-        tools: {},
-      },
-    },
-  );
-
-  // Handle tool listing
-  server.setRequestHandler(ListToolsRequestSchema, async () => {
-    log("Received ListTools request");
-    return { tools };
-  });
-
-  // Handle tool execution
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    try {
-      log(`Executing tool: ${request.params.name}`);
-      
-      // 特殊处理 GoPlus actions - 添加详细调试
-      if (request.params.name.startsWith('GoplusActionProvider_')) {
-        log(`[GoPlus Debug] Tool: ${request.params.name}`);
-        log(`[GoPlus Debug] Arguments: ${JSON.stringify(request.params.arguments)}`);
-        
-        // 特别检查代币地址
-        if (request.params.arguments && request.params.arguments.tokenAddress) {
-          const addr = request.params.arguments.tokenAddress;
-          log(`[GoPlus Debug] Token address: ${addr} (length: ${addr.length})`);
-          
-          // 验证 Solana 地址格式
-          const isValidFormat = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(addr);
-          log(`[GoPlus Debug] Address format valid: ${isValidFormat}`);
-        }
-      }
-      
-      const action = actions.find(action => action.name === request.params.name);
-      
-      if (!action) {
-        throw new Error(`Tool ${request.params.name} not found`);
-      }
-
-      const result = await action.invoke(request.params.arguments || {});
-      
-      // 特殊处理 GoPlus 结果
-      if (request.params.name.startsWith('GoplusActionProvider_')) {
-        const resultStr = typeof result === 'string' ? result : JSON.stringify(result);
-        log(`[GoPlus Debug] Raw result length: ${resultStr.length}`);
-        log(`[GoPlus Debug] Raw result preview: ${resultStr.substring(0, 200)}...`);
-        
-        // 尝试解析结果检查是否有错误
-        try {
-          const parsed = typeof result === 'string' ? JSON.parse(result) : result;
-          if (parsed.success === false) {
-            log(`[GoPlus Debug] API returned failure: ${parsed.error}`, true);
-          } else if (parsed.success === true) {
-            log(`[GoPlus Debug] API returned success with data`);
-          }
-        } catch (parseError) {
-          log(`[GoPlus Debug] Failed to parse result: ${parseError.message}`, true);
-        }
-      }
-      
-      log(`Tool ${request.params.name} executed successfully`);
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: typeof result === 'string' ? result : safeJsonStringify(result),
-          },
-        ],
-      };
-    } catch (error) {
-      log(`Tool ${request.params.name} failed: ${error.message}`, true);
-      
-
-      if (request.params.name.startsWith('GoplusActionProvider_')) {
-        log(`[GoPlus Debug] Error type: ${error.constructor.name}`, true);
-        log(`[GoPlus Debug] Error stack: ${error.stack}`, true);
-        
-        // 检查常见错误类型
-        if (error.message.includes('fetch')) {
-          log(`[GoPlus Debug] Network error detected`, true);
-        } else if (error.message.includes('timeout')) {
-          log(`[GoPlus Debug] Timeout error detected`, true);
-        } else if (error.message.includes('JSON')) {
-          log(`[GoPlus Debug] JSON parsing error detected`, true);
-        }
-      }
-      
-      throw new Error(`Tool ${request.params.name} failed: ${error.message}`);
-    }
-  });
-
   return server;
+}
+
+/**
+ * Create and configure the HTTP streaming MCP server
+ */
+async function createHttpMcpServer() {
+  setupEnvironment();
+  
+  const app = express();
+  
+  // Configure CORS for browser clients
+  app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+    exposedHeaders: ['Mcp-Session-Id'],
+    allowedHeaders: ['Content-Type', 'mcp-session-id'],
+    credentials: true
+  }));
+  
+  app.use(express.json({ limit: '10mb' }));
+  
+  // Map to store transports by session ID
+  const transports = {};
+  
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.json({ 
+      status: 'ok', 
+      server: 'agentkit-complete-http',
+      version: '0.2.0',
+      timestamp: new Date().toISOString(),
+      sessions: Object.keys(transports).length
+    });
+  });
+  
+  // Handle POST requests for client-to-server communication
+  app.post('/mcp', async (req, res) => {
+    try {
+      log(`Received POST /mcp request`);
+      
+      // Check for existing session ID
+      const sessionId = req.headers['mcp-session-id'];
+      let transport;
+
+      if (sessionId && transports[sessionId]) {
+        // Reuse existing transport
+        transport = transports[sessionId];
+        log(`Reusing existing session: ${sessionId}`);
+      } else if (!sessionId && isInitializeRequest(req.body)) {
+        // New initialization request
+        log(`Creating new session for initialize request`);
+        
+        transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: (sessionId) => {
+            // Store the transport by session ID
+            transports[sessionId] = transport;
+            log(`Session initialized: ${sessionId}`);
+          },
+          // Enable DNS rebinding protection for security
+          enableDnsRebindingProtection: false, // Set to true in production
+          // allowedHosts: ['127.0.0.1', 'localhost'],
+        });
+
+        // Clean up transport when closed
+        transport.onclose = () => {
+          if (transport.sessionId) {
+            log(`Session closed: ${transport.sessionId}`);
+            delete transports[transport.sessionId];
+          }
+        };
+        
+        // Create AgentKit server and connect
+        const mcpServer = createAgentKitServer();
+        await mcpServer.connect(transport);
+        
+        log(`Connected MCP server to transport`);
+      } else {
+        // Invalid request
+        log(`Invalid request: No valid session ID provided`, true);
+        res.status(400).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32000,
+            message: 'Bad Request: No valid session ID provided',
+          },
+          id: null,
+        });
+        return;
+      }
+
+      // Handle the request via transport
+      await transport.handleRequest(req, res, req.body);
+      
+    } catch (error) {
+      log(`Error handling POST /mcp request: ${error.message}`, true);
+      
+      if (!res.headersSent) {
+        res.status(500).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32603,
+            message: 'Internal server error',
+          },
+          id: null,
+        });
+      }
+    }
+  });
+
+  // Reusable handler for GET and DELETE requests
+  const handleSessionRequest = async (req, res) => {
+    try {
+      const sessionId = req.headers['mcp-session-id'];
+      
+      if (!sessionId || !transports[sessionId]) {
+        log(`Invalid session request: sessionId=${sessionId}`, true);
+        res.status(400).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32000,
+            message: 'Invalid or missing session ID',
+          },
+          id: null,
+        });
+        return;
+      }
+      
+      const transport = transports[sessionId];
+      log(`Handling session request for: ${sessionId}`);
+      await transport.handleRequest(req, res);
+      
+    } catch (error) {
+      log(`Error handling session request: ${error.message}`, true);
+      
+      if (!res.headersSent) {
+        res.status(500).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32603,
+            message: 'Internal server error',
+          },
+          id: null,
+        });
+      }
+    }
+  };
+
+  // Handle GET requests for server-to-client notifications via SSE
+  app.get('/mcp', handleSessionRequest);
+
+  // Handle DELETE requests for session termination
+  app.delete('/mcp', handleSessionRequest);
+  
+  // Graceful shutdown handling
+  const gracefulShutdown = () => {
+    log("Gracefully shutting down HTTP MCP Server...");
+    
+    // Close all active transports
+    Object.keys(transports).forEach(sessionId => {
+      try {
+        const transport = transports[sessionId];
+        if (transport && typeof transport.close === 'function') {
+          transport.close();
+        }
+        delete transports[sessionId];
+      } catch (error) {
+        log(`Error closing transport ${sessionId}: ${error.message}`, true);
+      }
+    });
+    
+    process.exit(0);
+  };
+  
+  process.on('SIGINT', gracefulShutdown);
+  process.on('SIGTERM', gracefulShutdown);
+
+  return app;
 }
 
 /**
@@ -598,36 +750,27 @@ async function createAgentKitMcpServer() {
  */
 async function main() {
   try {
-    setupEnvironment();
+    const app = await createHttpMcpServer();
+    const PORT = process.env.PORT || 3000;
+    const HOST = process.env.HOST || '0.0.0.0';
     
-    const server = await createAgentKitMcpServer();
-    const transport = new StdioServerTransport();
-    
-    log("Connecting to transport...");
-    await server.connect(transport);
-    log("Complete AgentKit MCP Server started successfully and ready to receive requests");
+    app.listen(PORT, HOST, () => {
+      log(`Complete AgentKit HTTP Streaming MCP Server listening on ${HOST}:${PORT}`);
+      log(`Health check: http://${HOST}:${PORT}/health`);
+      log(`MCP endpoint: http://${HOST}:${PORT}/mcp`);
+      log("Server ready to receive requests");
+    });
     
   } catch (error) {
-    log(`Failed to start MCP Server: ${error.message}`, true);
+    log(`Failed to start HTTP MCP Server: ${error.message}`, true);
     log(`Stack trace: ${error.stack}`, true);
     process.exit(1);
   }
 }
-
-// Handle graceful shutdown
-process.on('SIGINT', () => {
-  log("Received SIGINT, shutting down gracefully...");
-  process.exit(0);
-});
-
-process.on('SIGTERM', () => {
-  log("Received SIGTERM, shutting down gracefully...");
-  process.exit(0);
-});
 
 // Start the server
 if (require.main === module) {
   main();
 }
 
-module.exports = { main, createAgentKitMcpServer };
+module.exports = { main, createHttpMcpServer };

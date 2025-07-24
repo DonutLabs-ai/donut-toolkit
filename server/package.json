@@ -1,16 +1,21 @@
 {
   "name": "@coinbase/agentkit-model-context-protocol",
   "version": "0.2.0",
-  "description": "Model Context Protocol Extension of Coinbase Agentkit",
+  "description": "HTTP Streaming Model Context Protocol Extension of Coinbase Agentkit",
   "repository": "https://github.com/coinbase/agentkit",
   "author": "Coinbase Inc.",
   "license": "Apache-2.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "mcp-server.js",
   "files": [
+    "mcp-server.js",
     "dist"
   ],
   "scripts": {
+    "start": "node mcp-server.js",
+    "dev": "nodemon mcp-server.js",
+    "test:client": "node test-http-client.js",
+    "test:health": "node test-http-client.js --health-only",
+    "test:tools": "node test-http-client.js --tools-only",
     "build": "tsc",
     "lint": "eslint -c .eslintrc.json \"src/**/*.ts\"",
     "lint:fix": "eslint -c .eslintrc.json \"src/**/*.ts\" --fix",
@@ -23,8 +28,7 @@
     "clean": "rm -rf dist/*",
     "prepack": "tsc",
     "docs": "typedoc --entryPoints ./src --entryPointStrategy expand --exclude ./src/tests/**/*.ts",
-    "docs:serve": "http-server ./docs",
-    "dev": "tsc --watch"
+    "docs:serve": "http-server ./docs"
   },
   "keywords": [
     "coinbase",
@@ -36,15 +40,22 @@
     "agent",
     "nodejs",
     "typescript",
-    "mcp"
+    "mcp",
+    "http",
+    "streaming",
+    "server"
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^2.7.0",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.24.3"
   },
   "devDependencies": {
-    "@coinbase/agentkit": "workspace:*"
+    "@coinbase/agentkit": "workspace:*",
+    "nodemon": "^3.0.2"
   },
   "peerDependencies": {
     "@coinbase/agentkit": ">=0.1.0"
