@@ -1,14 +1,11 @@
-import { WalletProvider, CdpSmartWalletProvider } from "./wallet-providers";
+import { WalletProvider } from "./wallet-providers";
 import { Action, ActionProvider, walletActionProvider } from "./action-providers";
 
 /**
  * Configuration options for AgentKit
  */
 export type AgentKitOptions = {
-  cdpApiKeyId?: string;
-  cdpApiKeySecret?: string;
-  cdpWalletSecret?: string;
-  walletProvider?: WalletProvider;
+  walletProvider: WalletProvider;
   actionProviders?: ActionProvider[];
 };
 
@@ -25,9 +22,8 @@ export class AgentKit {
    * @param config - Configuration options for the AgentKit
    * @param config.walletProvider - The wallet provider to use
    * @param config.actionProviders - The action providers to use
-   * @param config.actions - The actions to use
    */
-  private constructor(config: AgentKitOptions & { walletProvider: WalletProvider }) {
+  constructor(config: AgentKitOptions) {
     this.walletProvider = config.walletProvider;
     this.actionProviders = config.actionProviders || [walletActionProvider()];
   }
@@ -38,30 +34,11 @@ export class AgentKit {
    * @param config - Configuration options for the AgentKit
    * @param config.walletProvider - The wallet provider to use
    * @param config.actionProviders - The action providers to use
-   * @param config.actions - The actions to use
    *
    * @returns A new AgentKit instance
    */
-  public static async from(
-    config: AgentKitOptions = { actionProviders: [walletActionProvider()] },
-  ): Promise<AgentKit> {
-    let walletProvider: WalletProvider | undefined = config.walletProvider;
-
-    if (!config.walletProvider) {
-      if (!config.cdpApiKeyId || !config.cdpApiKeySecret || !config.cdpWalletSecret) {
-        throw new Error(
-          "cdpApiKeyId and cdpApiKeySecret are required if not providing a walletProvider",
-        );
-      }
-
-      walletProvider = await CdpSmartWalletProvider.configureWithWallet({
-        apiKeyId: config.cdpApiKeyId,
-        apiKeySecret: config.cdpApiKeySecret,
-        walletSecret: config.cdpWalletSecret,
-      });
-    }
-
-    return new AgentKit({ ...config, walletProvider: walletProvider! });
+  public static async from(config: AgentKitOptions): Promise<AgentKit> {
+    return new AgentKit(config);
   }
 
   /**
